@@ -5,8 +5,14 @@ import cv2
 
 def my_sink(result, video_frame):
     if result.get("output_image"):  # Display an image from the workflow response
-        cv2.imshow("Workflow Image", result["output_image"].numpy_image)
-        if cv2.waitKey(1) == ord("q"):
+        output = result.get("output_image").numpy_image #Save image to output and do with it as you wish
+        height = output.shape[0]
+        width = output.shape[1]
+        text = cv2.putText(output, (str(width) + "x" + str(height)), (595, 10),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 1)
+
+        cv2.imshow("Workflow Image", output) #Shows chosen image
+        if cv2.waitKey(1) == ord("q"): #Selfexplanatory
             pipeline.terminate()
     print(result)  # do something with the predictions of each frame
 
