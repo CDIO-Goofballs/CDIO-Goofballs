@@ -14,8 +14,8 @@ while True:
     hsvFrame = cv2.cvtColor(imageFrame, cv2.COLOR_BGR2HSV)
 
     # Set range for green color
-    green_lower = np.array([45,80,80], np.uint8)
-    green_upper = np.array([75,255,255], np.uint8)
+    green_lower = np.array([40,50,50], np.uint8)
+    green_upper = np.array([85,255,255], np.uint8)
 
     # define mask
     green_mask = cv2.inRange(hsvFrame, green_lower, green_upper)
@@ -46,7 +46,7 @@ while True:
 
     for pic, contour in enumerate(contours):
         area = cv2.contourArea(contour)
-        if area > 300:
+        if area > 100:
             x, y, w, h = cv2.boundingRect(contour)
 
             # Send x + w/2 and y + h/2 to path finding program
@@ -65,7 +65,7 @@ while True:
                                            cv2.CHAIN_APPROX_SIMPLE)
     for pic, contour in enumerate(contours):
         area = cv2.contourArea(contour)
-        if area > 300:
+        if area > 100:
             x, y, w, h = cv2.boundingRect(contour)
 
             # Send x + w/2 and y + h/2 to path finding program
