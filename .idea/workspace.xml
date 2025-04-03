@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="026790e8-3758-480a-9b1c-0c18e1e83a8a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Image Recognition/RoboFlow/RoboFlowWorkflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/Image Recognition/RoboFlow/RoboFlowWorkflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/robotControls/client.py" beforeDir="false" afterPath="$PROJECT_DIR$/robotControls/client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/robotControls/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/robotControls/server.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,10 +41,12 @@
     &quot;Python.RoboFlow.executor&quot;: &quot;Run&quot;,
     &quot;Python.RoboFlowVideo.executor&quot;: &quot;Run&quot;,
     &quot;Python.RoboFlowWorkflow.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/Jonat/PycharmProjects/RoboFlow&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -62,13 +65,6 @@
       <recent name="C:\Users\Jonat\PycharmProjects\RoboFlow" />
     </key>
   </component>
-  <component name="SharedIndexes">
-    <attachedChunks>
-      <set>
-        <option value="bundled-python-sdk-14705d77f0bb-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.25659.43" />
-      </set>
-    </attachedChunks>
-  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -82,6 +78,9 @@
       <workItem from="1741871416106" duration="34000" />
       <workItem from="1741872598198" duration="663000" />
       <workItem from="1741873509399" duration="391000" />
+      <workItem from="1743069273965" duration="7000" />
+      <workItem from="1743506355998" duration="37000" />
+      <workItem from="1743509026166" duration="121000" />
     </task>
     <servers />
   </component>

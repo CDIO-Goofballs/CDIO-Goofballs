@@ -20,6 +20,7 @@ keyboard.add_hotkey('s', send_command, args=('backwards',)) # Move backward
 keyboard.add_hotkey('q', send_command, args=('exit',))     # Quit
 keyboard.add_hotkey('j', send_command, args=('speedup',)) # Speed up
 keyboard.add_hotkey('k', send_command, args=('speeddown',)) # Speed down
+keyboard.add_hotkey('u', send_command, args=('calibrateGyro',)) # Calibrate the gyro sensor
 
 # Wait for hotkeys to be pressed
 keyboard.wait('q')  # Keep waiting until 'q' is pressed to exit

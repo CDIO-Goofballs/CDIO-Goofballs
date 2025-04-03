@@ -1,10 +1,12 @@
 #!/usr/bin/env pybricks-micropython
-from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_B, MoveTank
+from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_B
+from ev3dev2.sensor import INPUT_1, INPUT_2, INPUT_3, INPUT_4
+from ev3dev2.sensor.lego import GyroSensor
 import socket
 
 # speed variables
 speed = 30 # 0 .. 100
-rotationSpeed = 30 # 0 .. 100
+rotationSpeed = 5 # 0 .. 100
 direction = 0
 
 # Initialize the EV3 Brick.
@@ -13,6 +15,9 @@ direction = 0
 motorA = LargeMotor(OUTPUT_A)
 motorB = LargeMotor(OUTPUT_B)
 
+# Initialize the sensors.
+gyro = GyroSensor(INPUT_1)
+gyro.mode = GyroSensor.MODE_GYRO_ANG
 # Setup EV3 server
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind(('', 12346))
@@ -66,12 +71,18 @@ try:
             direction = 3
             motorA.on(rotationSpeed)
             motorB.on(-rotationSpeed)
+            gyro.wait_until_angle_changed_by(90)
+            motorA.on(0)
+            motorB.on(0)
             client_socket.send(b"Turning right")
         elif command == "left":
             print("Turning left")
             direction = 4
             motorA.on(-rotationSpeed)
             motorB.on(rotationSpeed)
+            gyro.wait_until_angle_changed_by(90)
+            motorA.on(0)
+            motorB.on(0)
             client_socket.send(b"Turning left")
         elif command == "backwards":
             print("Moving backwards")
@@ -91,6 +102,11 @@ try:
             print("decreasing speed")
             speed = max(min(speed - 10, 100), 0)
             setMotorSpeed(speed)
+        elif command == "calibrateGyro":
+            print("Calibrating gyro sensor please do not move the robot")
+            gyro.mode = GyroSensor.MODE_GYRO_CAL
+            print("Calibration done. Back to angle.")
+            gyro.mode = GyroSensor.MODE_GYRO_ANG
         else:
             client_socket.send(b"Unknown command")
 
