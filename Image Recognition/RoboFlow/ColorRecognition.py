@@ -9,8 +9,8 @@ frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 def drawAxis(img, p_, q_, colour, scale):
-    p = list(p_)
-    q = list(q_)
+    p = list(p_) #green
+    q = list(q_) #purple
 
     angle = atan2(p[1] - q[1], p[0] - q[0])  # angle in radians
     hypotenuse = sqrt((p[1] - q[1]) * (p[1] - q[1]) + (p[0] - q[0]) * (p[0] - q[0]))
@@ -33,7 +33,7 @@ def drawAxis(img, p_, q_, colour, scale):
 while True:
     ret, imageFrame = cam.read()
 
-    middle_blue = []
+    middle_purple = []
     middle_green = []
 
     # Convert BGR to HSV colorspace
@@ -44,10 +44,10 @@ while True:
     green_upper = np.array([80,245,245], np.uint8)
     green_mask = cv2.inRange(hsvFrame, green_lower, green_upper)
 
-    # blue color
-    blue_lower = np.array([98, 80, 80], np.uint8)
-    blue_upper = np.array([139, 255, 255], np.uint8)
-    blue_mask = cv2.inRange(hsvFrame, blue_lower, blue_upper)
+    # purple color
+    purple_lower = np.array([130, 60, 60], np.uint8)
+    purple_upper = np.array([155, 255, 255], np.uint8)
+    purple_mask = cv2.inRange(hsvFrame, purple_lower, purple_upper)
 
     # to detect only that particular color
     kernal = np.ones((5, 5), "uint8")
@@ -56,9 +56,9 @@ while True:
     green_mask = cv2.dilate(green_mask, kernal)
     res_green = cv2.bitwise_and(imageFrame, imageFrame, mask=green_mask)
 
-    # blue color
-    blue_mask = cv2.dilate(blue_mask, kernal)
-    res_blue = cv2.bitwise_and(imageFrame, imageFrame, mask=blue_mask)
+    # purple color
+    purple_mask = cv2.dilate(purple_mask, kernal)
+    res_purple = cv2.bitwise_and(imageFrame, imageFrame, mask=purple_mask)
 
     # Creating contour to track green color
     contours, hierarchy = cv2.findContours(green_mask,
@@ -84,8 +84,8 @@ while True:
                         cv2.FONT_HERSHEY_SIMPLEX,
                         1.0, (0, 255, 0))
 
-    # Creating contour to track blue color
-    contours, hierarchy = cv2.findContours(blue_mask,
+    # Creating contour to track purple color
+    contours, hierarchy = cv2.findContours(purple_mask,
                                            cv2.RETR_TREE,
                                            cv2.CHAIN_APPROX_SIMPLE)
     for pic, contour in enumerate(contours):
@@ -94,28 +94,29 @@ while True:
             x, y, w, h = cv2.boundingRect(contour)
 
             # Send x + w/2 and y + h/2 to path finding program
-            middle_blue.append((x+w/2, y+h/2))
+            middle_purple.append((x + w / 2, y + h / 2))
 
             imageFrame = cv2.circle(imageFrame, (int(x + w / 2), int(y + h / 2)),
                                     5,
-                                    (255, 0, 0), 2)
+                                    (255, 0, 255), 2)
 
             imageFrame = cv2.rectangle(imageFrame, (x, y),
                                        (x + w, y + h),
-                                       (255, 0, 0), 2)
+                                       (255, 0, 255), 2)
 
-            cv2.putText(imageFrame, "Blue Colour", (x, y),
+            cv2.putText(imageFrame, "Purple Colour", (x, y),
                         cv2.FONT_HERSHEY_SIMPLEX,
-                        1.0, (255, 0, 0))
+                        1.0, (255, 0, 255))
 
-    print(middle_blue, middle_green)
-    if len(middle_green) != 0 and len(middle_blue) != 0:
+    #print(middle_purple, middle_green)
+    if len(middle_green) != 0 and len(middle_purple) != 0:
         for (x,y) in middle_green:
-            for (dx,dy) in middle_blue:
-                dist = sqrt(pow(x+dx, 2) + pow(y+dy, 2))
-                if dist < 30:
+            for (dx,dy) in middle_purple:
+                dist = sqrt(pow(x-dx, 2) + pow(y-dy, 2))
+                print(dist)
+                if dist > 100:
                     continue
-                drawAxis(imageFrame, (x,y), (dx,dy), (0, 255, 0), 1)
+                drawAxis(imageFrame, (x,y), (dx,dy), (255, 0, 0), 1)
 
         # get angle from vector
 
