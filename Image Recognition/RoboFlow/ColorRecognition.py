@@ -79,8 +79,8 @@ while True:
             # Send x + w/2 and y + h/2 to path finding program
             middle_green.append((x+w/2, y+h/2))
             imageFrame = cv2.circle(imageFrame, (int(x + w / 2), int(y + h / 2)),
-                                    5,
-                                    (0, 255, 0), 2)
+                                    1,
+                                    (0, 255, 0), 1)
 
             imageFrame = cv2.rectangle(imageFrame, (x, y),
                                        (x + w, y + h),
@@ -88,7 +88,7 @@ while True:
 
             cv2.putText(imageFrame, "Green Colour", (x, y),
                         cv2.FONT_HERSHEY_SIMPLEX,
-                        1.0, (0, 255, 0))
+                        0.7, (0, 255, 0))
 
     # Creating contour to track purple color
     contours, hierarchy = cv2.findContours(purple_mask,
@@ -103,8 +103,8 @@ while True:
             middle_purple.append((x + w / 2, y + h / 2))
 
             imageFrame = cv2.circle(imageFrame, (int(x + w / 2), int(y + h / 2)),
-                                    5,
-                                    (255, 0, 255), 2)
+                                    1,
+                                    (255, 0, 255), 1)
 
             imageFrame = cv2.rectangle(imageFrame, (x, y),
                                        (x + w, y + h),
@@ -112,7 +112,7 @@ while True:
 
             cv2.putText(imageFrame, "Purple Colour", (x, y),
                         cv2.FONT_HERSHEY_SIMPLEX,
-                        1.0, (255, 0, 255))
+                        0.7, (255, 0, 255))
 
     #print(middle_purple, middle_green)
     if len(middle_green) != 0 and len(middle_purple) != 0:
