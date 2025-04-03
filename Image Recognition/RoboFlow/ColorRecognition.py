@@ -2,11 +2,6 @@ import cv2
 from math import atan2, cos, sin, sqrt, pi, degrees
 import numpy as np
 
-cam = cv2.VideoCapture(0)
-
-# Get the default frame width and height
-frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 def angle_between(a, b):
     angle = degrees(atan2(a[1] - b[1], b[0] - a[0]))
@@ -36,35 +31,33 @@ def draw_axis(img, p_, q_, colour, scale):
     cv2.line(img, (int(p[0]), int(p[1])), (int(q[0]), int(q[1])), colour, 1, cv2.LINE_AA)
 
 
-while True:
-    ret, imageFrame = cam.read()
-
+def color_recognition(img):
     middle_purple = []
     middle_green = []
 
     # Convert BGR to HSV colorspace
-    hsvFrame = cv2.cvtColor(imageFrame, cv2.COLOR_BGR2HSV)
+    hsv_frame = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # Set range and mask for green color
     green_lower = np.array([45,60,60], np.uint8)
     green_upper = np.array([80,245,245], np.uint8)
-    green_mask = cv2.inRange(hsvFrame, green_lower, green_upper)
+    green_mask = cv2.inRange(hsv_frame, green_lower, green_upper)
 
     # purple color
     purple_lower = np.array([130, 60, 60], np.uint8)
     purple_upper = np.array([155, 255, 255], np.uint8)
-    purple_mask = cv2.inRange(hsvFrame, purple_lower, purple_upper)
+    purple_mask = cv2.inRange(hsv_frame, purple_lower, purple_upper)
 
     # to detect only that particular color
     kernal = np.ones((5, 5), "uint8")
 
     # green color
     green_mask = cv2.dilate(green_mask, kernal)
-    res_green = cv2.bitwise_and(imageFrame, imageFrame, mask=green_mask)
+    res_green = cv2.bitwise_and(img, img, mask=green_mask)
 
     # purple color
     purple_mask = cv2.dilate(purple_mask, kernal)
-    res_purple = cv2.bitwise_and(imageFrame, imageFrame, mask=purple_mask)
+    res_purple = cv2.bitwise_and(img, img, mask=purple_mask)
 
     # Creating contour to track green color
     contours, hierarchy = cv2.findContours(green_mask,
@@ -78,15 +71,15 @@ while True:
 
             # Send x + w/2 and y + h/2 to path finding program
             middle_green.append((x+w/2, y+h/2))
-            imageFrame = cv2.circle(imageFrame, (int(x + w / 2), int(y + h / 2)),
-                                    1,
-                                    (0, 255, 0), 1)
+            img = cv2.circle(img, (int(x + w / 2), int(y + h / 2)),
+                             1,
+                             (0, 255, 0), 1)
 
-            imageFrame = cv2.rectangle(imageFrame, (x, y),
-                                       (x + w, y + h),
-                                       (0, 255, 0), 2)
+            img = cv2.rectangle(img, (x, y),
+                                (x + w, y + h),
+                                (0, 255, 0), 2)
 
-            cv2.putText(imageFrame, "Green Colour", (x, y),
+            cv2.putText(img, "Green Colour", (x, y),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         0.7, (0, 255, 0))
 
@@ -102,18 +95,19 @@ while True:
             # Send x + w/2 and y + h/2 to path finding program
             middle_purple.append((x + w / 2, y + h / 2))
 
-            imageFrame = cv2.circle(imageFrame, (int(x + w / 2), int(y + h / 2)),
+            img = cv2.circle(img, (int(x + w / 2), int(y + h / 2)),
                                     1,
                                     (255, 0, 255), 1)
 
-            imageFrame = cv2.rectangle(imageFrame, (x, y),
-                                       (x + w, y + h),
-                                       (255, 0, 255), 2)
+            img = cv2.rectangle(img, (x, y),
+                                (x + w, y + h),
+                                (255, 0, 255), 2)
 
-            cv2.putText(imageFrame, "Purple Colour", (x, y),
+            cv2.putText(img, "Purple Colour", (x, y),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         0.7, (255, 0, 255))
 
+    latest_angle = 0
     #print(middle_purple, middle_green)
     if len(middle_green) != 0 and len(middle_purple) != 0:
         for (x,y) in middle_green:
@@ -121,18 +115,7 @@ while True:
                 dist = sqrt(pow(x-dx, 2) + pow(y-dy, 2))
                 if dist > 100:
                     continue
-                print(angle_between((x,y), (dx,dy)))
-                draw_axis(imageFrame, (x, y), (dx, dy), (255, 0, 0), 1)
+                latest_angle = angle_between((x,y), (dx,dy))
+                draw_axis(img, (x, y), (dx, dy), (255, 0, 0), 1)
 
-        # get angle from vector
-
-    # Display the captured frame
-    cv2.imshow("Color Detection", imageFrame)
-
-    # Press 'q' to exit the loop
-    if cv2.waitKey(1) == ord('q'):
-        break
-
-# Release the capture and writer objects
-cam.release()
-cv2.destroyAllWindows()
+    return img, latest_angle
