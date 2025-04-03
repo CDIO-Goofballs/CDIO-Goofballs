@@ -8,7 +8,13 @@ cam = cv2.VideoCapture(0)
 frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-def drawAxis(img, p_, q_, colour, scale):
+def angle_between(a, b):
+    angle = degrees(atan2(a[1] - b[1], b[0] - a[0]))
+    if angle < 0:
+        angle += 360
+    return angle
+
+def draw_axis(img, p_, q_, colour, scale):
     p = list(p_) #green
     q = list(q_) #purple
 
@@ -113,10 +119,10 @@ while True:
         for (x,y) in middle_green:
             for (dx,dy) in middle_purple:
                 dist = sqrt(pow(x-dx, 2) + pow(y-dy, 2))
-                print(dist)
                 if dist > 100:
                     continue
-                drawAxis(imageFrame, (x,y), (dx,dy), (255, 0, 0), 1)
+                print(angle_between((x,y), (dx,dy)))
+                draw_axis(imageFrame, (x, y), (dx, dy), (255, 0, 0), 1)
 
         # get angle from vector
 
@@ -130,9 +136,3 @@ while True:
 # Release the capture and writer objects
 cam.release()
 cv2.destroyAllWindows()
-
-def angle_between(a, b):
-    angle = degrees(atan2(a[1] - b[1], b[0] - a[0]))
-    if angle < 0:
-        angle += 360
-    return angle
