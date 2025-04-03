@@ -23,13 +23,9 @@ frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 #fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 #out = cv2.VideoWriter('output.mp4', fourcc, 20.0, (frame_width, frame_height))
 
-while True:
-    ret, frame = cam.read()
-
-    # Write the frame to the output file
-    #out.write(frame)
+def object_recognition(img):
     # run inference on our chosen image, image can be a url, a numpy array, a PIL image, etc.
-    results = model.infer(frame)[0]
+    results = model.infer(img)[0]
 
     # load the results into the supervision Detections api
     detections = sv.Detections.from_inference(results)
@@ -40,21 +36,8 @@ while True:
 
     # annotate the image with our inference results
     annotated_image = bounding_box_annotator.annotate(
-        scene=frame, detections=detections)
+        scene=img, detections=detections)
     annotated_image = label_annotator.annotate(
         scene=annotated_image, detections=detections)
 
-    # display the image
-    #sv.plot_image(annotated_image)
-
-    # Display the captured frame
-    cv2.imshow('Camera', annotated_image)
-
-    # Press 'q' to exit the loop
-    if cv2.waitKey(1) == ord('q'):
-        break
-
-# Release the capture and writer objects
-cam.release()
-#out.release()
-cv2.destroyAllWindows()
+    return annotated_image

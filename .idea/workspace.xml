@@ -6,8 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="026790e8-3758-480a-9b1c-0c18e1e83a8a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/robotControls/client.py" beforeDir="false" afterPath="$PROJECT_DIR$/robotControls/client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/robotControls/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/robotControls/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Image Recognition/RoboFlow/ColorRecognition.py" beforeDir="false" afterPath="$PROJECT_DIR$/Image Recognition/RoboFlow/ColorRecognition.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Image Recognition/RoboFlow/RoboFlowWorkflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/Image Recognition/RoboFlow/RoboFlowWorkflow.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,26 +36,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.RoboFlow.executor&quot;: &quot;Run&quot;,
-    &quot;Python.RoboFlowVideo.executor&quot;: &quot;Run&quot;,
-    &quot;Python.RoboFlowWorkflow.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Jonat/PycharmProjects/RoboFlow&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.ColorRecognition.executor": "Run",
+    "Python.RoboFlow.executor": "Run",
+    "Python.RoboFlowVideo.executor": "Run",
+    "Python.RoboFlowWorkflow.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/Jonat/PycharmProjects/RoboFlow",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Jonat\PycharmProjects\RoboFlow" />
@@ -64,6 +63,13 @@
       <recent name="C:\Users\Jonat\PycharmProjects\RoboFlow\Image Recognition\RoboFlow" />
       <recent name="C:\Users\Jonat\PycharmProjects\RoboFlow" />
     </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-14705d77f0bb-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.25659.43" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -78,9 +84,6 @@
       <workItem from="1741871416106" duration="34000" />
       <workItem from="1741872598198" duration="663000" />
       <workItem from="1741873509399" duration="391000" />
-      <workItem from="1743069273965" duration="7000" />
-      <workItem from="1743506355998" duration="37000" />
-      <workItem from="1743509026166" duration="121000" />
     </task>
     <servers />
   </component>
