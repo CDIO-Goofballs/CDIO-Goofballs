@@ -1,5 +1,5 @@
 import cv2
-from math import atan2, cos, sin, sqrt, pi
+from math import atan2, cos, sin, sqrt, pi, degrees
 import numpy as np
 
 cam = cv2.VideoCapture(0)
@@ -39,20 +39,15 @@ while True:
     # Convert BGR to HSV colorspace
     hsvFrame = cv2.cvtColor(imageFrame, cv2.COLOR_BGR2HSV)
 
-    # Set range for green color
+    # Set range and mask for green color
     green_lower = np.array([45,60,60], np.uint8)
     green_upper = np.array([80,245,245], np.uint8)
-
-    # define mask
     green_mask = cv2.inRange(hsvFrame, green_lower, green_upper)
 
     # blue color
     blue_lower = np.array([98, 80, 80], np.uint8)
     blue_upper = np.array([139, 255, 255], np.uint8)
-    #blue_lower = np.array([94, 80, 2], np.uint8)
-    #blue_upper = np.array([120, 255, 255], np.uint8)
     blue_mask = cv2.inRange(hsvFrame, blue_lower, blue_upper)
-
 
     # to detect only that particular color
     kernal = np.ones((5, 5), "uint8")
@@ -117,6 +112,9 @@ while True:
     if len(middle_green) != 0 and len(middle_blue) != 0:
         for (x,y) in middle_green:
             for (dx,dy) in middle_blue:
+                dist = sqrt(pow(x+dx, 2) + pow(y+dy, 2))
+                if dist < 30:
+                    continue
                 drawAxis(imageFrame, (x,y), (dx,dy), (0, 255, 0), 1)
 
         # get angle from vector
@@ -131,3 +129,9 @@ while True:
 # Release the capture and writer objects
 cam.release()
 cv2.destroyAllWindows()
+
+def angle_between(a, b):
+    angle = degrees(atan2(a[1] - b[1], b[0] - a[0]))
+    if angle < 0:
+        angle += 360
+    return angle
