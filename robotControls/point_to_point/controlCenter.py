@@ -3,7 +3,7 @@ import keyboard
 import math
 
 ev3_ip = '192.168.137.114'  # Replace with EV3's IP
-port = 12345
+port = 12346
 
 class Point:
     x = 0
@@ -20,8 +20,7 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((ev3_ip, port))
 
 # Function to send command to the server
-def send_command(*args):
-    command = ','.join(map(str, args))
+def send_command(command: str):
     client_socket.send(command.encode())
 
 def calculate_turn(p1, p2, orientation):
@@ -31,11 +30,11 @@ def calculate_turn(p1, p2, orientation):
     return (turn_angle + 180) % 360 - 180 # Normalize turn_angle to the range -180 to 180
 
 def calculate_distance(p1, p2):
-    return 5920
+    return 100
 
 # Setup hotkeys for key press events
-keyboard.add_hotkey('e', send_command, args='stop')
-keyboard.add_hotkey('w', send_command, args=('forward', calculate_distance(p1, p2)))
+keyboard.add_hotkey('e', send_command, args=("stop",))
+keyboard.add_hotkey('w', send_command, args=("forward," + str(calculate_distance(p1, p2)),))
 
 keyboard.wait('q')  # Keep waiting until 'q' is pressed to exit
 

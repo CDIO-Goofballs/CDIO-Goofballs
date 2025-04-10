@@ -13,11 +13,11 @@ left_motor = Motor(Port.A)
 right_motor = Motor(Port.B)
 
 # Initialize the drive base.
-robot = DriveBase(left_motor, right_motor, wheel_diameter=68.8, axle_track=116.2)
+robot = DriveBase(left_motor, right_motor, wheel_diameter=68.8, axle_track=145)
 
 # Setup EV3 server
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(('', 12345))
+server_socket.bind(('', 12346))
 server_socket.listen(1)
 
 print("Waiting for connection...")
