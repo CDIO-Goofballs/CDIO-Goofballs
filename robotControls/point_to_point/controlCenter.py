@@ -2,8 +2,8 @@ import socket
 import keyboard
 import math
 
-ev3_ip = '192.168.137.114'  # Replace with EV3's IP
-port = 12345
+ev3_ip = '192.168.0.138'  # Replace with EV3's IP
+port = 12346
 
 class Point:
     x = 0
@@ -30,13 +30,14 @@ def calculate_turn(p1, p2, orientation):
     return (turn_angle + 180) % 360 - 180 # Normalize turn_angle to the range -180 to 180
 
 def calculate_distance(p1, p2):
-    return 1000
+    return math.sqrt((p2.x - p1.x)**2+(p2.y - p1.y)**2)
 
 # Setup hotkeys for key press events
 keyboard.add_hotkey('e', send_command, args=("stop",))
 keyboard.add_hotkey('r', send_command, args=("resetgyro",))
 keyboard.add_hotkey('w', send_command, args=("forward," + str(calculate_distance(p1, p2)),))
 keyboard.add_hotkey('s', send_command, args=("backwards," + str(calculate_distance(p1, p2)),))
+keyboard.add_hotkey('1', send_command, args=("toggle_servo",))
 
 keyboard.wait('q')  # Keep waiting until 'q' is pressed to exit
 
