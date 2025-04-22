@@ -11,7 +11,7 @@ frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 while True:
     ret, imageFrame = cam.read()
 
-    imageFrame, latest_angle = color_recognition(imageFrame)
+    imageFrame, latest_angle, latest_position = color_recognition(imageFrame)
     imageFrame = object_recognition(imageFrame)
 
     # Display the captured frame
@@ -23,6 +23,8 @@ while True:
 
 def get_angle():
     return latest_angle
+def get_position():
+    return latest_position
 
 # Release the capture and writer objects
 cam.release()

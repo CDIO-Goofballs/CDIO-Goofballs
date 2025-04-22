@@ -108,7 +108,8 @@ def color_recognition(img):
                         0.7, (255, 0, 255))
 
     latest_angle = 0
-    #print(middle_purple, middle_green)
+    latest_position = (0,0)
+
     if len(middle_green) != 0 and len(middle_purple) != 0:
         for (x,y) in middle_green:
             for (dx,dy) in middle_purple:
@@ -116,6 +117,7 @@ def color_recognition(img):
                 if dist > 100:
                     continue
                 latest_angle = angle_between((x,y), (dx,dy))
+                latest_position = ( (x+dx)/2, (y+dy)/2 )
                 draw_axis(img, (x, y), (dx, dy), (255, 0, 0), 1)
 
-    return img, latest_angle
+    return img, latest_angle, latest_position
