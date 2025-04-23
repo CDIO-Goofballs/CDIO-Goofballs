@@ -12,7 +12,7 @@ from sympy.strategies.core import switch
 #results = CLIENT.infer("Test.jpg", model_id="pingpong-2/1")
 
 # load a pre-trained yolov8n model
-model = get_model(model_id="oob_cdio-kghp5/4", api_key="VD9BLusLGWoKvrez3ufK")
+model = get_model(model_id="oob_cdio-kghp5/8", api_key="VD9BLusLGWoKvrez3ufK")
 
 cam = cv2.VideoCapture(1)
 
