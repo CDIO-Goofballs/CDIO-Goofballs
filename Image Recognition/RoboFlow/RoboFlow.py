@@ -1,4 +1,5 @@
-import numpy as np
+import math
+
 from sklearn.linear_model import LinearRegression
 
 from inference_sdk import InferenceHTTPClient
@@ -27,35 +28,43 @@ balls = []
 vip_balls = []
 walls = []
 
+ratio = 10
+
+def longest_distance(points):
+    max_dist = 0
+    for i in range(len(points)):
+        x1 = points[i].x
+        y1 = points[i].y
+        for j in range(i + 1, len(points)):
+            x2 = points[j].x
+            y2 = points[j].y
+            dist = math.hypot(x2 - x1, y2 - y1)
+            if dist > max_dist:
+                max_dist = dist
+    return max_dist
+
 def object_recognition(img):
     # run inference on our chosen image, image can be a url, a numpy array, a PIL image, etc.
+    global ratio
     results = model.infer(img)[0]
     predictions = results.predictions
     for prediction in predictions:
         match prediction.class_name:
             case "Ball":
+                #print(longest_distance(prediction.points))
+                ratio = 4 / longest_distance(prediction.points)
                 balls.append((prediction.x, prediction.y))
                 cv2.circle(img, (int(prediction.x), int(prediction.y)),
                                  1,
                                  (0, 255, 0), 1)
-                print(f"x: {prediction.x}, y: {prediction.y}")
+                #print(f"x: {prediction.x}, y: {prediction.y}")
             case "Vip":
                 vip_balls.append((prediction.x, prediction.y))
-                print(f"x: {prediction.x}, y: {prediction.y}")
+                print(f"Vip diameter: {longest_distance(prediction.points) * ratio}")
+                #print(f"x: {prediction.x}, y: {prediction.y}")
             case "Wall":
                 walls.append(prediction.points)
-                points = np.array([(point.x, point.y) for point in prediction.points])
-                linear_model = LinearRegression()
-                linear_model.fit(points[:, 0].reshape(-1,1), points[:, 1])
-                slope = linear_model.coef_[0]
-                intercept = linear_model.intercept_
-
-                x_min, x_max = min(points[:, 0]), max(points[:, 0])
-                y_min = slope * x_min + intercept
-                y_max = slope * x_max + intercept
-
-                cv2.line(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (255, 0, 0), 2)  # Blue line
-                print(prediction.points)
+                print(f"Wall diameter: {longest_distance(prediction.points) * ratio}")
             case "Cross":
                 print(prediction.points)
 
