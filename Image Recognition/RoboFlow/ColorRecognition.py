@@ -44,8 +44,8 @@ def color_recognition(img):
     green_mask = cv2.inRange(hsv_frame, green_lower, green_upper)
 
     # purple color
-    purple_lower = np.array([130, 60, 60], np.uint8)
-    purple_upper = np.array([155, 255, 255], np.uint8)
+    purple_lower = np.array([130, 50, 50], np.uint8)
+    purple_upper = np.array([170, 255, 255], np.uint8)
     purple_mask = cv2.inRange(hsv_frame, purple_lower, purple_upper)
 
     # to detect only that particular color
@@ -110,14 +110,16 @@ def color_recognition(img):
     latest_angle = 0
     latest_position = (0,0)
 
+    distance = 0
     if len(middle_green) != 0 and len(middle_purple) != 0:
         for (x,y) in middle_green:
             for (dx,dy) in middle_purple:
                 dist = sqrt(pow(x-dx, 2) + pow(y-dy, 2))
-                if dist > 100:
-                    continue
+                #if dist > 100:
+                #    continue
+                distance = dist
                 latest_angle = angle_between((x,y), (dx,dy))
                 latest_position = ( (x+dx)/2, (y+dy)/2 )
                 draw_axis(img, (x, y), (dx, dy), (255, 0, 0), 1)
 
-    return img, latest_angle, latest_position
+    return img, latest_angle, latest_position, distance

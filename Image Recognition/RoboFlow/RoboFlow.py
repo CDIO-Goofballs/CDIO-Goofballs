@@ -16,7 +16,7 @@ from sympy.strategies.core import switch
 #results = CLIENT.infer("Test.jpg", model_id="pingpong-2/1")
 
 # load a pre-trained yolov8n model
-model = get_model(model_id="oob_cdio-kghp5/8", api_key="VD9BLusLGWoKvrez3ufK")
+model = get_model(model_id="oob_cdio-kghp5/9", api_key="VD9BLusLGWoKvrez3ufK")
 
 cam = cv2.VideoCapture(1)
 
@@ -46,17 +46,20 @@ def longest_distance(points):
 def object_recognition(img):
     # run inference on our chosen image, image can be a url, a numpy array, a PIL image, etc.
     global ratio
+    balls.clear()
+    vip_balls.clear()
+    walls.clear()
     results = model.infer(img)[0]
     predictions = results.predictions
     for prediction in predictions:
         match prediction.class_name:
             case "Ball":
-                print(f"Ball diameter: {longest_distance(prediction.points) * ratio}")
+                #print(f"Ball diameter: {longest_distance(prediction.points) * ratio}")
                 balls.append((prediction.x, prediction.y))
                 #print(f"x: {prediction.x}, y: {prediction.y}")
             case "Vip":
                 vip_balls.append((prediction.x, prediction.y))
-                print(f"Vip diameter: {longest_distance(prediction.points) * ratio}")
+                #print(f"Vip diameter: {longest_distance(prediction.points) * ratio}")
                 #print(f"x: {prediction.x}, y: {prediction.y}")
             case "Wall":
                 walls.append(prediction.points)
@@ -64,11 +67,12 @@ def object_recognition(img):
             case "Cross":
                 print(prediction.points)
 
-
-    distance = 0
-    for wall in walls:
-        distance += longest_distance(wall)
-    ratio = (112*2+172*2) / distance
+    if len(walls) == 4:
+        distance = 0
+        for wall in walls:
+            distance += longest_distance(wall)
+        print(distance)
+        ratio = (112*2+172*2) / distance
 
     # load the results into the supervision Detections api
     detections = sv.Detections.from_inference(results)

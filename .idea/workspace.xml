@@ -7,7 +7,8 @@
     <list default="true" id="026790e8-3758-480a-9b1c-0c18e1e83a8a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Image Recognition/RoboFlow/ColorRecognition.py" beforeDir="false" afterPath="$PROJECT_DIR$/Image Recognition/RoboFlow/ColorRecognition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Image Recognition/RoboFlow/RoboFlowWorkflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/Image Recognition/RoboFlow/RoboFlowWorkflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Image Recognition/RoboFlow/MainImageRecognition.py" beforeDir="false" afterPath="$PROJECT_DIR$/Image Recognition/RoboFlow/MainImageRecognition.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Image Recognition/RoboFlow/RoboFlow.py" beforeDir="false" afterPath="$PROJECT_DIR$/Image Recognition/RoboFlow/RoboFlow.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,25 +37,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.ColorRecognition.executor": "Run",
-    "Python.RoboFlow.executor": "Run",
-    "Python.RoboFlowVideo.executor": "Run",
-    "Python.RoboFlowWorkflow.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/Jonat/PycharmProjects/RoboFlow",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.ColorRecognition.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.MainImageRecognition.executor&quot;: &quot;Run&quot;,
+    &quot;Python.RoboFlow.executor&quot;: &quot;Run&quot;,
+    &quot;Python.RoboFlowVideo.executor&quot;: &quot;Run&quot;,
+    &quot;Python.RoboFlowWorkflow.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/peter/Documents/GitHub/CDIO-Goofballs/Image Recognition/RoboFlow/MainImageRecognition.py&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Jonat\PycharmProjects\RoboFlow" />
@@ -63,6 +66,31 @@
       <recent name="C:\Users\Jonat\PycharmProjects\RoboFlow\Image Recognition\RoboFlow" />
       <recent name="C:\Users\Jonat\PycharmProjects\RoboFlow" />
     </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="Main" type="PythonConfigurationType" factoryName="Python">
+      <module name="CDIO-Goofballs" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.12" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Image Recognition/RoboFlow/MainImageRecognition.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
