@@ -1,3 +1,6 @@
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
 from inference_sdk import InferenceHTTPClient
 from inference import get_model
 import supervision as sv
@@ -32,12 +35,26 @@ def object_recognition(img):
         match prediction.class_name:
             case "Ball":
                 balls.append((prediction.x, prediction.y))
+                cv2.circle(img, (int(prediction.x), int(prediction.y)),
+                                 1,
+                                 (0, 255, 0), 1)
                 print(f"x: {prediction.x}, y: {prediction.y}")
             case "Vip":
                 vip_balls.append((prediction.x, prediction.y))
                 print(f"x: {prediction.x}, y: {prediction.y}")
             case "Wall":
                 walls.append(prediction.points)
+                points = np.array([(point.x, point.y) for point in prediction.points])
+                linear_model = LinearRegression()
+                linear_model.fit(points[:, 0].reshape(-1,1), points[:, 1])
+                slope = linear_model.coef_[0]
+                intercept = linear_model.intercept_
+
+                x_min, x_max = min(points[:, 0]), max(points[:, 0])
+                y_min = slope * x_min + intercept
+                y_max = slope * x_max + intercept
+
+                cv2.line(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (255, 0, 0), 2)  # Blue line
                 print(prediction.points)
             case "Cross":
                 print(prediction.points)
