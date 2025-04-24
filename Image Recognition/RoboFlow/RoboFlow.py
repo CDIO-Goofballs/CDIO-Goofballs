@@ -51,6 +51,7 @@ def object_recognition(img):
     walls.clear()
     results = model.infer(img)[0]
     predictions = results.predictions
+
     for prediction in predictions:
         match prediction.class_name:
             case "Ball":

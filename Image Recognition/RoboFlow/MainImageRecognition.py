@@ -11,11 +11,16 @@ frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 while True:
     ret, imageFrame = cam.read()
 
+    print('--------------Start------------------')
+
     imageFrame, latest_angle, latest_position, distance = color_recognition(imageFrame)
     imageFrame, ratio = object_recognition(imageFrame)
 
     if distance > 0:
         print(distance * ratio)
+        print(latest_position) #latest robot position
+
+    print('--------------End------------------')
 
     # Display the captured frame
     cv2.imshow("Image Recognition", imageFrame)
