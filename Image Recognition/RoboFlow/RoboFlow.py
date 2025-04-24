@@ -86,4 +86,4 @@ def object_recognition(img):
     annotated_image = label_annotator.annotate(
         scene=annotated_image, detections=detections)
 
-    return annotated_image
+    return annotated_image, ratio

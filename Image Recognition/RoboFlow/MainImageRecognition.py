@@ -12,7 +12,7 @@ while True:
     ret, imageFrame = cam.read()
 
     imageFrame, latest_angle, latest_position = color_recognition(imageFrame)
-    imageFrame = object_recognition(imageFrame)
+    imageFrame, ratio = object_recognition(imageFrame)
 
     # Display the captured frame
     cv2.imshow("Image Recognition", imageFrame)
@@ -25,6 +25,8 @@ def get_angle():
     return latest_angle
 def get_position():
     return latest_position
+def get_ratio():
+    return ratio # pixels * ratio = cm
 
 # Release the capture and writer objects
 cam.release()
