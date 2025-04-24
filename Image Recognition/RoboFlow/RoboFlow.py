@@ -51,12 +51,8 @@ def object_recognition(img):
     for prediction in predictions:
         match prediction.class_name:
             case "Ball":
-                #print(longest_distance(prediction.points))
-                ratio = 4 / longest_distance(prediction.points)
+                print(f"Ball diameter: {longest_distance(prediction.points) * ratio}")
                 balls.append((prediction.x, prediction.y))
-                cv2.circle(img, (int(prediction.x), int(prediction.y)),
-                                 1,
-                                 (0, 255, 0), 1)
                 #print(f"x: {prediction.x}, y: {prediction.y}")
             case "Vip":
                 vip_balls.append((prediction.x, prediction.y))
@@ -64,10 +60,15 @@ def object_recognition(img):
                 #print(f"x: {prediction.x}, y: {prediction.y}")
             case "Wall":
                 walls.append(prediction.points)
-                print(f"Wall diameter: {longest_distance(prediction.points) * ratio}")
+                print(f"Wall length: {longest_distance(prediction.points) * ratio}")
             case "Cross":
                 print(prediction.points)
 
+
+    distance = 0
+    for wall in walls:
+        distance += longest_distance(wall)
+    ratio = (112*2+172*2) / distance
 
     # load the results into the supervision Detections api
     detections = sv.Detections.from_inference(results)
