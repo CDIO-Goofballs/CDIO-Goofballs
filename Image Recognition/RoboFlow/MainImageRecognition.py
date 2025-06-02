@@ -20,7 +20,7 @@ while True:
         print(distance * ratio)
         print(latest_position) #latest robot position
 
-    print('--------------End------------------')
+    print('--------------End--------------------\n')
 
     # Display the captured frame
     cv2.imshow("Image Recognition", imageFrame)
