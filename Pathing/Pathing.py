@@ -4,9 +4,11 @@ from shapely.geometry import LineString, Polygon, Point
 from itertools import combinations
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
+from shapely.geometry import Point
 
 class Environment:
     def __init__(self, objects, vip_object, obstacles, start_point=None):
+
         self.start_point = start_point
         self.vip = vip_object
         self.objects = objects
@@ -33,6 +35,31 @@ class Environment:
                 return False
         return True
 
+def is_line_clear(env, p1, p2):
+    if p1 is None or p2 is None:
+        return False
+    line = LineString([p1, p2])
+
+    # Check polygon obstacles
+    for obstacle in env.obstacles:
+        if line.crosses(obstacle) or line.within(obstacle):
+            return False
+        inter = line.intersection(obstacle)
+        if not inter.is_empty and not (inter.geom_type == 'Point' or inter.geom_type == 'MultiPoint'):
+            return False
+
+    radius = 2  # radius of balls
+
+    # Check object obstacles (balls) except p1 and p2
+    for obj in env.main_points:
+        if obj == p1 or obj == p2:
+            continue
+        circle = Point(obj).buffer(radius)
+        if line.crosses(circle) or line.within(circle):
+            return False
+
+    return True
+
 def build_visibility_graph(env):
     G = nx.Graph()
     points = env.all_points
@@ -40,12 +67,18 @@ def build_visibility_graph(env):
         return G
     for i, j in combinations(range(len(points)), 2):
         p1, p2 = points[i], points[j]
-        if env.is_visible(p1, p2):
+        if is_line_clear(env, p1, p2):
             dist = np.linalg.norm(np.array(p1) - np.array(p2))
             G.add_edge(i, j, weight=dist)
     for idx in range(len(points)):
         G.add_node(idx)
     return G
+
+#start_idx = 0
+#vip_idx = 1
+#if not G.has_edge(start_idx, vip_idx):
+#    print("No direct collision-free path from start to VIP!")
+    # Handle this case: maybe abort or try alternate routing
 
 def compute_distance_matrix(env, G):
     n = len(env.main_points)
@@ -111,6 +144,13 @@ def expand_full_route(env, G, tsp_path):
     for i in range(len(tsp_path) - 1):
         source = tsp_path[i]
         target = tsp_path[i+1]
+
+        # Force direct line for start->VIP
+        if source == 0 and target == 1:
+            route.append(env.all_points[source])
+            route.append(env.all_points[target])
+            continue
+
         try:
             subpath_indices = nx.shortest_path(G, source=source, target=target, weight='weight')
         except (nx.NetworkXNoPath, nx.NodeNotFound):
@@ -179,7 +219,7 @@ def plot_path(route, env, graph):
     if start_point:
         start_circ = Circle(start_point, radius=2, edgecolor='black', facecolor='green',
                         lw=1.5, label='Robot Start', transform=ax.transData)
-    ax.add_patch(start_circ)
+        ax.add_patch(start_circ)
 
 
     # Draw turn points
@@ -210,7 +250,7 @@ def plot_path(route, env, graph):
     # Finalize layout
     ax.set_xlim(0, 160)
     ax.set_ylim(0, 120)
-    ax.set_title("Robot Path Plan with Obstacle Avoidance")
+    ax.set_title("Robot Path Plan")
     plt.grid(True)
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
@@ -221,43 +261,139 @@ def plan_robot_path(vip, objects, cross, start_point=None):
     if vip is None and (not objects or len(objects) == 0):
         print("No VIP or objects provided; no path to plan.")
         return []
-
-    # Convert cross input to obstacle polygons
+    
     obstacle_polygons = convert_cross_to_polygons(cross)
-
-    env = Environment(objects, vip, obstacle_polygons, start_point)
-    G = build_visibility_graph(env)
-    dist_mat = compute_distance_matrix(env, G)
-
-    tsp_path = christofides_tsp(dist_mat)
-
-    # The tsp_path now includes robot start node at index 0,
-    # VIP at index 1, and then objects
-
-    # No need to reorder since robot start is at 0, but ensure it starts there:
-    if tsp_path and tsp_path[0] != 0:
-        # rotate tsp_path so it starts at 0 (robot start)
-        idx = tsp_path.index(0)
-        tsp_path = tsp_path[idx:] + tsp_path[1:idx+1]
-
-    full_route = expand_full_route(env, G, tsp_path)
-
-    if full_route:
-        plot_path(full_route, env, G)
+    
+    # Create environment with just start point and VIP for the first segment
+    # This ensures priority pathing from start to VIP
+    env_start_to_vip = Environment([], vip, obstacle_polygons, start_point=start_point)
+    G_start_vip = build_visibility_graph(env_start_to_vip)
+    
+    # Find shortest path from start (0) to vip (1)
+    try:
+        path_start_to_vip_indices = nx.shortest_path(G_start_vip, source=0, target=1, weight='weight')
+        path_start_to_vip = [env_start_to_vip.all_points[i] for i in path_start_to_vip_indices]
+    except (nx.NetworkXNoPath, nx.NodeNotFound):
+        print("No collision-free path from start to VIP.")
+        return []
+    
+    # Now create environment for the objects only (excluding start and VIP from obstacles)
+    # This prevents the robot from treating objects as obstacles when it's going to visit them
+    env_objects = Environment(objects, None, obstacle_polygons, start_point=vip)
+    G_objects = build_visibility_graph(env_objects)
+    
+    if len(objects) == 0:
+        return path_start_to_vip
+        
+    # Create optimized TSP tour through all objects
+    # First, compute distance matrix only among objects (not including obstacle vertices)
+    dist_mat = compute_distance_matrix(env_objects, G_objects)
+    
+    # Run TSP algorithm starting from the VIP point (index 0)
+    tsp_indices = christofides_tsp(dist_mat)
+    
+    # Make sure path starts with VIP point (index 0)
+    if 0 not in tsp_indices:
+        tsp_indices.insert(0, 0)
+    elif tsp_indices[0] != 0:
+        vip_index = tsp_indices.index(0)
+        tsp_indices = tsp_indices[vip_index:] + tsp_indices[:vip_index]
+    
+    # Get the actual visitation sequence of main points only (VIP + objects)
+    main_point_sequence = []
+    for idx in tsp_indices:
+        if idx < len(env_objects.main_points):  # Only include main points, not turning points
+            point = env_objects.all_points[idx]
+            if not main_point_sequence or point != main_point_sequence[-1]:  # Avoid duplicates
+                main_point_sequence.append(point)
+    
+    # Now build the complete path connecting these main points in sequence
+    # with optimal navigation around obstacles
+    object_route = []
+    for i in range(len(main_point_sequence) - 1):
+        source_pt = main_point_sequence[i]
+        target_pt = main_point_sequence[i + 1]
+        
+        # Find source and target indices in the full point list
+        source_idx = env_objects.all_points.index(source_pt)
+        target_idx = env_objects.all_points.index(target_pt)
+        
+        # Find shortest path between these points
+        try:
+            subpath_indices = nx.shortest_path(G_objects, source=source_idx, target=target_idx, weight='weight')
+            
+            # Add all points except the last one (which will be the start of next segment)
+            for idx in subpath_indices[:-1]:
+                object_route.append(env_objects.all_points[idx])
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
+            # If no path found, just add the source point and continue
+            object_route.append(source_pt)
+            print(f"Warning: No path found between {source_pt} and {target_pt}")
+            continue
+    
+    # Add the final destination point
+    if main_point_sequence:
+        object_route.append(main_point_sequence[-1])
+    
+    # Combine the start→VIP path with the object tour path
+    # But avoid duplicating the VIP point which is included in both
+    final_route = path_start_to_vip
+    if len(object_route) > 0 and object_route[0] == vip:
+        final_route.extend(object_route[1:])
     else:
-        print("No valid route found with given inputs.")
-    return full_route
+        final_route.extend(object_route)
+    
+    # Create a full environment for visualization
+    env_full = Environment(objects, vip, obstacle_polygons, start_point=start_point)
+    G_full = build_visibility_graph(env_full)
+    
+    # Plot the full route
+    plot_path(final_route, env_full, G_full)
+    
+    return final_route
 
 
-# Example usage with missing inputs:
+
+# Example usage with random values:
 if __name__ == '__main__':
-    start_point = (20, 80)  # Robot initial location
-    vip = (100, 40)          # VIP object
-    objects = [(50, 30), (100, 60)]
-    cross = ((80, 100), (80, 40), (120, 70), (40, 70))  # Top, Bottom, Right, Left
+    import random
+    
+    # Set random seed for reproducibility (remove this line for true randomness)
+    # random.seed(42)
+    
+    # Generate random coordinates within the game area (0-160, 0-120)
+    start_point = (random.uniform(10, 40), random.uniform(20, 100))  # Robot initial location
+    
+    # VIP position - keep away from edges and center for better path finding
+    vip = (random.uniform(100, 140), random.uniform(70, 110))
+    
+    # Generate 3-5 random objects
+    num_objects = random.randint(3, 5)
+    objects = []
+    for _ in range(num_objects):
+        objects.append((random.uniform(20, 140), random.uniform(10, 110)))
+    
+    # Generate random cross obstacle
+    # We'll create the cross with some constraints to avoid blocking all paths
+    cx = random.uniform(60, 100)  # Cross center X
+    cy = random.uniform(40, 80)   # Cross center Y
+    cross_height = random.uniform(30, 50)
+    cross_width = random.uniform(40, 60)
+    
+    cross = (
+        (cx, cy + cross_height/2),  # Top
+        (cx, cy - cross_height/2),  # Bottom
+        (cx + cross_width/2, cy),   # Right
+        (cx - cross_width/2, cy)    # Left
+    )
 
+    print(f"Start point: {start_point}")
+    print(f"VIP position: {vip}")
+    print(f"Objects: {objects}")
+    print(f"Cross: {cross}")
+    
     final_path = plan_robot_path(vip, objects, cross, start_point)
-    print("Robot Pickup Path:")
+    print("\nRobot Pickup Path:")
     for pt in final_path:
         print(pt)
 
