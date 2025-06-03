@@ -21,22 +21,30 @@ egg = None
 cross = None
 small_goal = None
 
-while True:
-    ret, imageFrame = cam.read()
+def start_image_recognition():
+    global scale_factor, latest_position, latest_angle, balls, vip_ball, walls, egg, cross, small_goal
+    while True:
+        ret, imageFrame = cam.read()
 
-    print('--------------Start------------------')
+        print('--------------Start------------------')
 
-    imageFrame, scale_factor, latest_position, latest_angle = find_qr(imageFrame, scale_factor, frame_width, frame_height)
-    imageFrame, balls, vip_ball, walls, cross, egg, small_goal = object_recognition(imageFrame, scale_factor)
+        imageFrame, scale_factor, latest_position, latest_angle = find_qr(imageFrame, scale_factor, frame_width,
+                                                                          frame_height)
+        imageFrame, balls, vip_ball, walls, cross, egg, small_goal = object_recognition(imageFrame, scale_factor)
 
-    print('--------------End--------------------\n')
+        print('--------------End--------------------\n')
 
-    # Display the captured frame
-    cv2.imshow("Image Recognition", imageFrame)
+        # Display the captured frame
+        cv2.imshow("ImageRecognition", imageFrame)
 
-    # Press 'q' to exit the loop
-    if cv2.waitKey(1) == ord('q'):
-        break
+        # Press 'q' to exit the loop
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+    # Release the capture and writer objects
+    cam.release()
+    cv2.destroyAllWindows()
+
 
 # Function to get the latest angle, position, and other recognized objects
 def get_angle():
@@ -93,8 +101,4 @@ def small_goal():
     :return: None if no small goal is detected, otherwise a tuple (x, y) representing the position of the small goal.
     """
     return small_goal
-
-# Release the capture and writer objects
-cam.release()
-cv2.destroyAllWindows()
 
