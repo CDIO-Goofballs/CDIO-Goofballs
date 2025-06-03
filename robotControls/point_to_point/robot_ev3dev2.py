@@ -1,58 +1,14 @@
-#!/usr/bin/env pybricks-micropython
+#!/usr/bin/env python3
 from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_B, MoveSteering, MoveDifferential, MoveTank, SpeedPercent, SpeedDPM, follow_for_ms, FollowGyroAngleErrorTooFast
 from ev3dev2.sensor import INPUT_1, INPUT_2, INPUT_3, INPUT_4
 from ev3dev2.sensor.lego import GyroSensor
 from ev3dev2.wheel import EV3Tire
-import threading
 import socket
 import time
+import threading
+import queue
 
-class MessageQueue:
-    def __init__(self):
-        self.queue = []
-        
-    def print_queue(self):
-        """Print the entire queue."""
-        if not self.is_empty():
-            print("Queue contents:")
-            for message in self.queue:
-                # Assuming message is a tuple (value1, value2)
-                print("- Value 1:", message[0], ", Value 2:", message[1])
-        else:
-            print("Queue is empty!")
-       
-    def peek(self):
-        """Return the first tuple without removing it."""
-        if not self.is_empty():
-            return self.queue[0]
-        else:
-            return None
-         
-    def enqueue(self, message):
-        """Add a message to the queue."""
-        execute = False
-        if self.is_empty:
-            execute = True
-        self.queue.append(message)
-        if(execute): execute_command(self.peek())
-        print("Message added: ", message)
-        self.print_queue()
-    
-    def dequeue(self):
-        """Remove and return the first message from the queue."""
-        if not self.is_empty():
-            message = self.queue.pop(0)
-            print("Message removed: ", message)
-            return message
-        else:
-            print("Queue is empty!")
-            return None
-        
-    def is_empty(self):
-        """Check if the queue is empty."""
-        return len(self.queue) == 0
-
-queue = MessageQueue()
+queue = queue.Queue()
 
 # Initialize the motors.
 motorA = LargeMotor(OUTPUT_A)
@@ -67,13 +23,16 @@ tank.gyro = GyroSensor()
 move_diff.gyro = GyroSensor()
 
 # Setup EV3 server
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(('', 12346))
-server_socket.listen(1)
+#server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#server_socket.bind(('', 12346))
+#server_socket.listen(1)
 
-print("Waiting for connection...")
-client_socket, addr = server_socket.accept()
-print("Connected to {}".format(addr)) 
+shutdown_event = threading.Event()
+stop_event = threading.Event()
+
+#print("Waiting for connection...")
+#client_socket, addr = server_socket.accept()
+#print("Connected to {}".format(addr)) 
 
 # Calibrate the gyro to eliminate drift, and to initialize the current angle as 0
 tank.gyro.calibrate()
@@ -96,7 +55,12 @@ def degrees_to_mm(degrees):
 
 
 def stop():
-    steering.stop()
+    print("Stopped")
+    tank.stop()
+    tank.off()
+    stop_event.is_set()
+    while (not queue.empty()):
+        queue.get()
 
 def adjust_to_gyro(target_deg, speed=1):
     while abs(tank.gyro.angle - target_deg) > 1:  # allow a tiny error range
@@ -138,78 +102,69 @@ def straight(distance):
         tank.stop()
         raise
     finally:
-        stop()
+        tank.stop()
 
 def test():
     time.sleep(10)
 
-def execute_command(command):
-    cmd = command[0]
-    arg = command[1]
-    if(cmd == "stop"): stop()
-    elif(cmd == "drive"): straight(-float(arg)) # Invert directionen since front is back.
-    elif(cmd == "turn"): rotate(-float(arg))
-    elif(cmd== "test"): test()
-    queue.dequeue()
-    if(not queue.is_empty()): execute_command(queue.peek())
+def execute_command():
+    while not shutdown_event.is_set():
+        if(stop_event.is_set()): 
+            continue
+        command = queue.get()
+        cmd = command[0]
+        arg = command[1]
+        print("Got command: ", (cmd, arg))
+        if(cmd == "drive"): straight(-float(arg)) # Invert directionen since front is back.
+        elif(cmd == "turn"): rotate(-float(arg))
+        #elif(cmd== "test"): test()
+        time.sleep(0.1)
 
-def check_for_commands():
+
+def check_for_commands(conn):
     try:
-        while True:
-            data = client_socket.recv(1024)
+        while not shutdown_event.is_set():
+            data = conn.recv(1024)
             if not data:
                 break
 
             commands = data.decode().strip().split(',')
             print("Command received:", commands)
             command = commands.pop(0)
+            
+            if(command == "stop"): 
+                stop()
+                continue
+            else:
+                stop_event.clear()
             if(len(commands) > 0):
                 arg = commands.pop(0)
-                t1 = threading.Thread(target = queue.enqueue((command, arg)))
-            else: t1 = threading.Thread(target = queue.enqueue((command, None)))
-            t1.start()
-           
+                queue.put((command, arg))
+            else: queue.put((command, None))
+            time.sleep(0.1)
             
     finally:
         stop()
-        client_socket.close()
-        server_socket.close()
+        conn.close()
+        shutdown_event.set()
         print("Connection closed")
 
-check_for_commands()
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+    server_socket.bind(('', 12345))
+    server_socket.listen(1)
 
-def long_straight_test():
-    straight(10000)
-    rotate(180)
-    straight(10000)
+    print("Waiting for connection...")
+    client_socket, addr = server_socket.accept()
+    print("Connected to {}".format(addr))
+    
+    producer = threading.Thread(target=check_for_commands, args=(client_socket,), daemon=True)
+    consumer = threading.Thread(target=execute_command, daemon=True)
 
-def advanced_combined_test():
-    straight(840)
-    straight(840/2)
-    rotate(-90)
-    straight(840)
-    rotate(-90)
-    straight(840)
-    straight(840/2)
-    rotate(-90)
-    straight(840)
-    rotate(-90)
-
-def combined_test_shear():
-    rotate(-45)
-    straight(840)
-    rotate(-180)
-    straight(840)
-    rotate(-180)
-    rotate(45)
-
-def combined_test():
-    straight(840)
-    straight(840)
-    rotate(180)
-    straight(840)
-    straight(840)
-    rotate(180)
-
-def rotate_test():
-    rotate(90)
+    
+    consumer.start()
+    producer.start()
+    
+    while(not shutdown_event.is_set()):
+        time.sleep(0.1)
+    
+stop()

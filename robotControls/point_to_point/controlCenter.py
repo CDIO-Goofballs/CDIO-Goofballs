@@ -3,8 +3,8 @@ import keyboard
 import math
 import time
 
-ev3_ip = '192.168.137.114'  # Replace with EV3's IP
-port = 12346
+ev3_ip = '192.168.137.30'  # Replace with EV3's IP
+port = 12345
 
 class Point:
     x = 0
@@ -41,9 +41,9 @@ def collect_one_ball():
     send_command("drive," + str(calculate_distance(p1, p2)))
 
 # Setup hotkeys for key press events
-# keyboard.add_hotkey('e', send_command, args=("stop",))
+keyboard.add_hotkey('e', send_command, args=("stop",))
 # keyboard.add_hotkey('r', send_command, args=("resetgyro",))
-#keyboard.add_hotkey('w', send_command, args=("drive," + str(calculate_distance(p1, p2)),))
+keyboard.add_hotkey('w', send_command, args=("drive, 800",)) #str(calculate_distance(p1, p2)),))
 #keyboard.add_hotkey('d', send_command, args=("turn," + str(90),))
 #keyboard.add_hotkey('a', send_command, args=("turn," + str(-90),))
 keyboard.add_hotkey('t', send_command, args=("test",))
