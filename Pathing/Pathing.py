@@ -10,7 +10,8 @@ class Environment:
         self.start_point = start_point
         self.vip = vip_object
         self.objects = objects
-        self.main_points = self.objects
+        #self.main_points = self.objects
+        self.main_points = ([self.start_point] if self.start_point else []) + ([self.vip] if self.vip else []) + self.objects
         self.obstacles = obstacles
 
         # Extract obstacle vertices as extra navigation points
@@ -161,6 +162,26 @@ def plot_path(route, env, graph):
         x, y = poly.exterior.xy
         ax.fill(x, y, color='red', alpha=0.5, label='Obstacle' if i == 0 else None)
 
+    # Draw normal objects (Balls) as circles
+    for i, obj in enumerate(env.objects):
+        circ = Circle(obj, radius=2, edgecolor='black', facecolor='none',
+                      lw=1.5, label='Ball' if i == 0 else None, transform=ax.transData)
+        ax.add_patch(circ)
+
+    # Draw VIP as gold circle
+    if env.vip:
+        vip_circ = Circle(env.vip, radius=2, edgecolor='black', facecolor='gold',
+                          lw=1.5, label='VIP Ball', transform=ax.transData)
+        ax.add_patch(vip_circ)
+
+    # Draw robot start location as a green circle
+    start_point = env.start_point
+    if start_point:
+        start_circ = Circle(start_point, radius=2, edgecolor='black', facecolor='green',
+                        lw=1.5, label='Robot Start', transform=ax.transData)
+    ax.add_patch(start_circ)
+
+
     # Draw turn points
     if env.obstacle_points:
         ax.scatter(*zip(*env.obstacle_points), color='blue', s=30, label='Turn Point')
@@ -209,8 +230,17 @@ def plan_robot_path(vip, objects, cross, start_point=None):
     dist_mat = compute_distance_matrix(env, G)
 
     tsp_path = christofides_tsp(dist_mat)
-    ordered_path = reorder_path_to_start_with_vip(tsp_path)
-    full_route = expand_full_route(env, G, ordered_path)
+
+    # The tsp_path now includes robot start node at index 0,
+    # VIP at index 1, and then objects
+
+    # No need to reorder since robot start is at 0, but ensure it starts there:
+    if tsp_path and tsp_path[0] != 0:
+        # rotate tsp_path so it starts at 0 (robot start)
+        idx = tsp_path.index(0)
+        tsp_path = tsp_path[idx:] + tsp_path[1:idx+1]
+
+    full_route = expand_full_route(env, G, tsp_path)
 
     if full_route:
         plot_path(full_route, env, G)
@@ -218,13 +248,16 @@ def plan_robot_path(vip, objects, cross, start_point=None):
         print("No valid route found with given inputs.")
     return full_route
 
+
 # Example usage with missing inputs:
 if __name__ == '__main__':
-    vip = (20,20)
+    start_point = (20, 80)  # Robot initial location
+    vip = (100, 40)          # VIP object
     objects = [(50, 30), (100, 60)]
     cross = ((80, 100), (80, 40), (120, 70), (40, 70))  # Top, Bottom, Right, Left
 
-    final_path = plan_robot_path(vip, objects, cross, start_point=(100, 10))
+    final_path = plan_robot_path(vip, objects, cross, start_point)
     print("Robot Pickup Path:")
     for pt in final_path:
         print(pt)
+
