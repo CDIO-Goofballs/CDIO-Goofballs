@@ -131,6 +131,14 @@ def expand_full_route(env, G, tsp_path):
 # Public Entry Function
 # ----------------------
 def plan_robot_path(vip, objects, obstacle_polygons, pickup_radius=2):
+    """
+    Plan a robot path to pick up objects and a VIP object while avoiding obstacles.
+    :param vip: Tuple (x, y) for the VIP object
+    :param objects: List of tuples [(x1, y1), (x2, y2), ...] for normal objects
+    :param obstacle_polygons: List of lists of tuples representing obstacle vertices
+    :param pickup_radius: Radius around each object for pickup
+    :return: List of tuples representing the full route
+    """
     env = Environment(objects, vip, obstacle_polygons, pickup_radius)
     G = build_visibility_graph(env)
     dist_mat = compute_distance_matrix(env, G)
