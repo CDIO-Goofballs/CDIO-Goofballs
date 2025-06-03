@@ -8,30 +8,36 @@ import matplotlib.pyplot as plt
 # Environment & Geometry Helpers
 # -------------------------------
 class Environment:
-    def __init__(self, objects, vip_object, obstacles):
-        self.vip = vip_object
-        self.objects = objects  # list of 10 (x, y) tuples
-        self.obstacles = [Polygon(obs) for obs in obstacles]  # list of polygons
-        
-        # Collect obstacle corners as points
+    def __init__(self, objects, vip_object, obstacles, pickup_radius=2):
+        self.pickup_radius = pickup_radius
+
+        # Offset object points to pickup positions
+        self.vip = self._offset_point(vip_object)
+        self.objects = [self._offset_point(obj) for obj in objects]  # list of 10 (x, y) tuples
+        self.main_points = [self.vip] + self.objects
+
+        # Inflate obstacles
+        self.obstacles = [Polygon(obs).buffer(self.pickup_radius) for obs in obstacles]
+
+        # Extract obstacle vertices as extra navigation points
         self.obstacle_points = []
         for poly in self.obstacles:
-            self.obstacle_points.extend(list(poly.exterior.coords)[:-1])  # exclude repeated last point
+            self.obstacle_points.extend(list(poly.exterior.coords)[:-1])
 
-        # All points = vip + objects + obstacle corners
-        self.main_points = [vip_object] + objects
         self.all_points = self.main_points + self.obstacle_points
+
+    def _offset_point(self, point):
+        # Apply a small fixed offset along a default diagonal
+        offset = np.array([1, 1]) / np.sqrt(2) * self.pickup_radius
+        return tuple(np.array(point) - offset)
 
     def is_visible(self, p1, p2):
         line = LineString([p1, p2])
-        # Check line against all obstacles; line touching polygon edge is allowed, but crossing is not
         for obstacle in self.obstacles:
             if line.crosses(obstacle) or line.within(obstacle):
                 return False
-            # intersection at a single point on boundary is OK (e.g. touching corner)
             inter = line.intersection(obstacle)
             if not inter.is_empty and not (inter.geom_type == 'Point' or inter.geom_type == 'MultiPoint'):
-                # If intersection is a line or polygon, reject
                 return False
         return True
 
@@ -45,9 +51,7 @@ def build_visibility_graph(env):
         p1, p2 = points[i], points[j]
         if env.is_visible(p1, p2):
             dist = np.linalg.norm(np.array(p1) - np.array(p2))
-            # Turn cost could be refined, but for now no added cost here
             G.add_edge(i, j, weight=dist)
-    # Ensure all nodes are added (in case isolated)
     for idx in range(len(points)):
         G.add_node(idx)
     return G
@@ -56,18 +60,17 @@ def build_visibility_graph(env):
 # Path Length Matrix
 # ------------------
 def compute_distance_matrix(env, G):
-    n = len(env.main_points)  # Only main points for TSP
+    n = len(env.main_points)
     dist_matrix = np.full((n, n), np.inf)
-    main_indices = range(n)  # main points are first n in env.all_points
-    for i in main_indices:
-        for j in main_indices:
+    for i in range(n):
+        for j in range(n):
             if i == j:
                 dist_matrix[i][j] = 0
             else:
                 try:
-                    dist_matrix[i][j] = nx.shortest_path_length(G, source=i, target=j, weight='weight')
+                    dist_matrix[i][j] = nx.shortest_path_length(G, i, j, weight='weight')
                 except nx.NetworkXNoPath:
-                    dist_matrix[i][j] = np.inf
+                    pass
     return dist_matrix
 
 # -------------------------
@@ -107,7 +110,7 @@ def christofides_tsp(dist_matrix):
 # Final Route with VIP First
 # ---------------------------
 def reorder_path_to_start_with_vip(path):
-    vip_index = path.index(0)  # VIP is always at index 0
+    vip_index = path.index(0)
     return path[vip_index:] + path[1:vip_index+1]
 
 # -------------------------------------
@@ -118,85 +121,82 @@ def expand_full_route(env, G, tsp_path):
     for i in range(len(tsp_path) - 1):
         source = tsp_path[i]
         target = tsp_path[i+1]
-        # Get shortest path in visibility graph between source and target
         subpath_indices = nx.shortest_path(G, source=source, target=target, weight='weight')
-        # Append all points except last to avoid duplicates, last will be start of next segment
         for idx in subpath_indices[:-1]:
             route.append(env.all_points[idx])
-    # Add last point explicitly
     route.append(env.all_points[tsp_path[-1]])
     return route
 
 # ----------------------
 # Public Entry Function
 # ----------------------
-def plan_robot_path(vip, objects, obstacle_polygons):
-    env = Environment(objects, vip, obstacle_polygons)
+def plan_robot_path(vip, objects, obstacle_polygons, pickup_radius=2):
+    env = Environment(objects, vip, obstacle_polygons, pickup_radius)
     G = build_visibility_graph(env)
     dist_mat = compute_distance_matrix(env, G)
     tsp_path = christofides_tsp(dist_mat)
     ordered_path = reorder_path_to_start_with_vip(tsp_path)
     full_route = expand_full_route(env, G, ordered_path)
-    plot_path(full_route, env.obstacles, G, env.all_points, env.main_points)
+    plot_path(full_route, env, G)
     return full_route
 
 # -------------------
 # Plotting Function
 # -------------------
-def plot_path(route, obstacles, graph, all_points, main_points):
-    fig, ax = plt.subplots()
-    # Draw obstacles
-    for poly in obstacles:
+def plot_path(route, env, graph):
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.plot([0, 160, 160, 0, 0], [0, 0, 120, 120, 0], color='black', linestyle='--')
+
+    for i, poly in enumerate(env.obstacles):
         x, y = poly.exterior.xy
-        ax.fill(x, y, color='red', alpha=0.5)
+        ax.fill(x, y, color='red', alpha=0.5, label='Obstacle' if i == 0 else None)
 
-    # Draw visibility graph edges
-    # for (u, v) in graph.edges():
-    #     x_vals = [all_points[u][0], all_points[v][0]]
-    #     y_vals = [all_points[u][1], all_points[v][1]]
-    #     ax.plot(x_vals, y_vals, linestyle='dotted', color='gray', alpha=0.3)
+    ax.scatter(*zip(*env.objects), color='green', s=50, label='Normal Object')
+    ax.scatter(*zip(*[env.vip]), color='gold', s=70, edgecolors='black', label='VIP Object')
 
-    # Draw route path
-    x_vals = [p[0] for p in route]
-    y_vals = [p[1] for p in route]
-    ax.plot(x_vals, y_vals, marker='o', linestyle='-', color='blue')
+    for i in range(len(route) - 1):
+        x_vals = [route[i][0], route[i+1][0]]
+        y_vals = [route[i][1], route[i+1][1]]
+        ax.plot(x_vals, y_vals, marker='o', linestyle='-', color='blue', label='Route' if i == 0 else None)
 
-    # Mark main points (VIP + objects)
-    for idx, pt in enumerate(main_points):
-        ax.scatter(pt[0], pt[1], c='green' if idx == 0 else 'orange', s=80, zorder=5)
-        ax.text(pt[0], pt[1], f'M{idx}' if idx > 0 else 'VIP', fontsize=9, ha='right')
+    for pt in set(route):
+        label = ""
+        if pt == env.vip:
+            label = "VIP Object"
+            color = 'gold'
+        elif pt in env.objects:
+            label = "Normal Object"
+            color = 'green'
+        elif pt in env.obstacle_points:
+            label = "Turn Point"
+            color = 'blue'
+        ax.text(pt[0], pt[1], label, fontsize=7, ha='left', va='bottom', color=color)
 
+    ax.set_xlim(0, 160)
+    ax.set_ylim(0, 120)
     ax.set_title("Robot Path Plan")
     ax.set_aspect('equal')
     plt.grid(True)
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    plt.legend(by_label.values(), by_label.keys())
     plt.show()
 
 # -----------------
 # Example Usage:
 # -----------------
 if __name__ == '__main__':
-    import random
-    
-    # Generate random VIP position (between 0 and 20)
-    vip = (random.uniform(0, 20), random.uniform(0, 20))
-    
-    # Generate 10 random object positions
-    objects = []
-    for _ in range(10):
-        objects.append((random.uniform(0, 20), random.uniform(0, 20)))
-    
-    # Generate 2-4 random rectangular obstacles
-    obstacles = []
-    for _ in range(random.randint(2, 4)):
-        # Create a random rectangle
-        x = random.uniform(0, 15)
-        y = random.uniform(0, 15)
-        width = random.uniform(1, 4)
-        height = random.uniform(1, 4)
-        # Add rectangle as polygon points (clockwise)
-        obstacles.append([(x, y), (x + width, y), (x + width, y + height), (x, y + height)])
-    
-    final_path = plan_robot_path(vip, objects, obstacles)
+    vip = (40, 30)
+    objects = [
+        (80, 18), (16, 48), (120, 36), (72, 72), (48, 102),
+        (104, 84), (8, 6), (128, 12), (56, 48), (32, 78)
+    ]
+    obstacles = [
+        [(56, 42), (72, 42), (72, 54), (56, 54)],
+        [(88, 60), (112, 60), (112, 78), (88, 78)]
+    ]
+
+    final_path = plan_robot_path(vip, objects, obstacles, pickup_radius=2)
     print("Robot Pickup Path:")
     for pt in final_path:
         print(pt)
