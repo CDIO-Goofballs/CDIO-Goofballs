@@ -22,17 +22,8 @@ move_diff = MoveDifferential(OUTPUT_A, OUTPUT_B, EV3Tire, 170)
 tank.gyro = GyroSensor()
 move_diff.gyro = GyroSensor()
 
-# Setup EV3 server
-#server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#server_socket.bind(('', 12346))
-#server_socket.listen(1)
-
 shutdown_event = threading.Event()
 stop_event = threading.Event()
-
-#print("Waiting for connection...")
-#client_socket, addr = server_socket.accept()
-#print("Connected to {}".format(addr)) 
 
 # Calibrate the gyro to eliminate drift, and to initialize the current angle as 0
 tank.gyro.calibrate()
@@ -86,7 +77,6 @@ def rotate(deg):
     print("Turning by ", deg)
     tank.gyro.reset()
     tank.turn_degrees(speed=SpeedPercent(30), target_angle=deg)
-    print("Finished turning")
     #time.sleep(0.5)
     #adjust_to_gyro(deg)
     
