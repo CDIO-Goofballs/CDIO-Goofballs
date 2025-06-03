@@ -44,10 +44,10 @@ def collect_one_ball():
 keyboard.add_hotkey('e', send_command, args=("stop",))
 # keyboard.add_hotkey('r', send_command, args=("resetgyro",))
 keyboard.add_hotkey('w', send_command, args=("drive, 800",)) #str(calculate_distance(p1, p2)),))
-#keyboard.add_hotkey('d', send_command, args=("turn," + str(90),))
-#keyboard.add_hotkey('a', send_command, args=("turn," + str(-90),))
+keyboard.add_hotkey('d', send_command, args=("turn," + str(90),))
+keyboard.add_hotkey('a', send_command, args=("turn," + str(-90),))
 keyboard.add_hotkey('t', send_command, args=("test",))
-# keyboard.add_hotkey('s', send_command, args=("backwards," + str(calculate_distance(p1, p2)),))
+keyboard.add_hotkey('s', send_command, args=("backwards, 800",))
 # keyboard.add_hotkey('1', send_command, args=("toggle_servo",))
 # keyboard.add_hotkey('w', collect_one_ball)
 
