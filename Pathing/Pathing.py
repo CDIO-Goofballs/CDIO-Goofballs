@@ -212,15 +212,18 @@ def plot_path(route, env, graph):
     if env.vip:
         vip_circ = Circle(env.vip, radius=2, edgecolor='black', facecolor='gold',
                           lw=1.5, label='VIP Ball', transform=ax.transData)
-        ax.add_patch(vip_circ)
-
-    # Draw robot start location as a green circle
+        ax.add_patch(vip_circ)    # Draw robot start location as a green circle
     start_point = env.start_point
     if start_point:
         start_circ = Circle(start_point, radius=2, edgecolor='black', facecolor='green',
                         lw=1.5, label='Robot Start', transform=ax.transData)
         ax.add_patch(start_circ)
-
+                        
+    # Draw goal location as a blue circle (if specified)
+    if hasattr(env, 'goal_point') and env.goal_point:
+        goal_circ = Circle(env.goal_point, radius=2, edgecolor='black', facecolor='blue',
+                        lw=1.5, label='Goal Point', transform=ax.transData)
+        ax.add_patch(goal_circ)
 
     # Draw turn points
     if env.obstacle_points:
@@ -257,7 +260,7 @@ def plot_path(route, env, graph):
     plt.legend(by_label.values(), by_label.keys())
     plt.show()
 
-def plan_robot_path(vip, objects, cross, start_point=None):
+def plan_robot_path(vip, objects, cross, start_point=None, goal_point=None):
     if vip is None and (not objects or len(objects) == 0):
         print("No VIP or objects provided; no path to plan.")
         return []
@@ -283,7 +286,29 @@ def plan_robot_path(vip, objects, cross, start_point=None):
     G_objects = build_visibility_graph(env_objects)
     
     if len(objects) == 0:
-        return path_start_to_vip
+        # If there are no objects, just go from start to VIP to goal (if specified)
+        if goal_point:
+            # Create environment for VIP to goal
+            env_goal = Environment([], None, obstacle_polygons, start_point=vip)
+            # Add goal point as a "virtual object"
+            env_goal.objects = [goal_point]
+            env_goal.main_points = [vip, goal_point]
+            env_goal.all_points = env_goal.main_points + env_goal.obstacle_points
+            
+            # Build graph for VIP to goal
+            G_goal = build_visibility_graph(env_goal)
+            
+            # Find path from VIP to goal
+            try:
+                vip_to_goal_indices = nx.shortest_path(G_goal, source=0, target=1, weight='weight')
+                vip_to_goal = [env_goal.all_points[i] for i in vip_to_goal_indices]
+                # Return combined path: start -> VIP -> goal
+                return path_start_to_vip[:-1] + vip_to_goal
+            except (nx.NetworkXNoPath, nx.NodeNotFound):
+                print("No collision-free path from VIP to goal.")
+                return path_start_to_vip
+        else:
+            return path_start_to_vip
         
     # Create optimized TSP tour through all objects
     # First, compute distance matrix only among objects (not including obstacle vertices)
@@ -342,9 +367,37 @@ def plan_robot_path(vip, objects, cross, start_point=None):
         final_route.extend(object_route[1:])
     else:
         final_route.extend(object_route)
+        
+    # If goal point is specified, add path from last object to goal
+    if goal_point:
+        last_point = final_route[-1]
+        
+        # Create environment for last object to goal
+        env_goal = Environment([], None, obstacle_polygons, start_point=last_point)
+        # Add goal point as a "virtual object"
+        env_goal.objects = [goal_point]
+        env_goal.main_points = [last_point, goal_point]
+        env_goal.all_points = env_goal.main_points + env_goal.obstacle_points
+        
+        # Build graph for last object to goal
+        G_goal = build_visibility_graph(env_goal)
+        
+        # Find path from last object to goal
+        try:
+            to_goal_indices = nx.shortest_path(G_goal, source=0, target=1, weight='weight')
+            # Skip the first point since it's already in the final_route
+            to_goal = [env_goal.all_points[i] for i in to_goal_indices[1:]]
+            final_route.extend(to_goal)
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
+            print(f"Warning: No collision-free path from last object to goal. Goal point {goal_point} will be ignored.")
     
     # Create a full environment for visualization
     env_full = Environment(objects, vip, obstacle_polygons, start_point=start_point)
+    # Add goal point to visualization
+    if goal_point:
+        env_full.goal_point = goal_point
+    else:
+        env_full.goal_point = None
     G_full = build_visibility_graph(env_full)
     
     # Plot the full route
@@ -367,8 +420,11 @@ if __name__ == '__main__':
     # VIP position - keep away from edges and center for better path finding
     vip = (random.uniform(100, 140), random.uniform(70, 110))
     
-    # Generate 3-5 random objects
-    num_objects = random.randint(3, 5)
+    # Goal point - where the robot should end up after collecting all objects
+    goal_point = (random.uniform(120, 150), random.uniform(10, 40))  # Bottom-right area
+    
+    # Generate random objects
+    num_objects = 10
     objects = []
     for _ in range(num_objects):
         objects.append((random.uniform(20, 140), random.uniform(10, 110)))
@@ -389,10 +445,11 @@ if __name__ == '__main__':
 
     print(f"Start point: {start_point}")
     print(f"VIP position: {vip}")
+    print(f"Goal point: {goal_point}")
     print(f"Objects: {objects}")
     print(f"Cross: {cross}")
     
-    final_path = plan_robot_path(vip, objects, cross, start_point)
+    final_path = plan_robot_path(vip, objects, cross, start_point, goal_point)
     print("\nRobot Pickup Path:")
     for pt in final_path:
         print(pt)
