@@ -8,14 +8,6 @@ import supervision as sv
 import cv2
 from sympy.strategies.core import switch
 
-#CLIENT = InferenceHTTPClient(
-    #api_url="https://detect.roboflow.com",
-    #api_key="VD9BLusLGWoKvrez3ufK"
-#)
-
-#results = CLIENT.infer("Test.jpg", model_id="pingpong-2/1")
-
-# load a pre-trained yolov8n model
 model = get_model(model_id="oob_cdio-kghp5/9", api_key="VD9BLusLGWoKvrez3ufK")
 
 cam = cv2.VideoCapture(1)
@@ -25,51 +17,51 @@ frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 balls = []
-vip_balls = []
+vip_ball = None
 walls = []
+egg = None
+cross = None
+small_goal = None
 
-def longest_distance(points):
-    max_dist = 0
-    for i in range(len(points)):
-        x1 = points[i].x
-        y1 = points[i].y
-        for j in range(i + 1, len(points)):
-            x2 = points[j].x
-            y2 = points[j].y
-            dist = math.hypot(x2 - x1, y2 - y1)
-            if dist > max_dist:
-                max_dist = dist
-    return max_dist
+def point_x(point):
+  return point.x
+def point_y(point):
+  return point.y
 
-def object_recognition(img):
+def object_recognition(img, scale_factor):
+    global vip_ball
+    global cross
+    global egg
+    global small_goal
     # run inference on our chosen image, image can be a url, a numpy array, a PIL image, etc.
-    global ratio
     balls.clear()
-    vip_balls.clear()
+    vip_ball = None
     walls.clear()
+    cross = []
+    egg = None
+    small_goal = None
+
     results = model.infer(img)[0]
     predictions = results.predictions
 
     for prediction in predictions:
         match prediction.class_name:
             case "Ball":
-                #print(f"Ball diameter: {longest_distance(prediction.points) * ratio}")
-                balls.append((prediction.x, prediction.y))
-                #print(f"x: {prediction.x}, y: {prediction.y}")
+                balls.append((prediction.x * scale_factor, prediction.y * scale_factor))
             case "Vip":
-                vip_balls.append((prediction.x, prediction.y))
-                #print(f"Vip diameter: {longest_distance(prediction.points) * ratio}")
-                #print(f"x: {prediction.x}, y: {prediction.y}")
+                vip_ball = (prediction.x * scale_factor, prediction.y * scale_factor)
             case "Wall":
-                walls.append(prediction.points)
+                walls.append([(scale_factor * point.x, scale_factor * point.y) for point in prediction.points])
             case "Cross":
-                print(prediction.points)
-
-    if len(walls) == 4:
-        distance = 0
-        for wall in walls:
-            distance += longest_distance(wall)
-        print(distance)
+                top = prediction.points.sort(key = point_y)[0]
+                bottom = prediction.points.sort(key = point_y, reverse=True)[0]
+                right = prediction.points.sort(key = point_x)[0]
+                left = prediction.points.sort(key = point_x, reverse=True)[0]
+                cross = (top, bottom, right, left)
+            case "Eggman":
+                egg = (prediction.x * scale_factor, prediction.y * scale_factor)
+            case "Small-goal":
+                small_goal = (prediction.x * scale_factor, prediction.y * scale_factor)
 
     # load the results into the supervision Detections api
     detections = sv.Detections.from_inference(results)
@@ -87,4 +79,4 @@ def object_recognition(img):
     annotated_image = label_annotator.annotate(
         scene=annotated_image, detections=detections)
 
-    return annotated_image
+    return annotated_image, balls, vip_ball, walls, cross, egg, small_goal

@@ -1,7 +1,6 @@
 import math
 
 import cv2
-import cvlog as log
 import numpy as np
 
 qr = cv2.QRCodeDetector()
@@ -26,6 +25,7 @@ def find_qr(image, scale_factor, width, height):
     retval, decoded_info, polygons, straight_qrcode = qr.detectAndDecodeMulti(image)
     world_coordinates_x = 0
     world_coordinates_y = 0
+    angle_deg = 0
 
     i = 0
     while i < len(decoded_info):
@@ -35,18 +35,6 @@ def find_qr(image, scale_factor, width, height):
 
         if len(points) == 4:  # Expecting a rectangular QR code
             pts = np.array(points, dtype=np.float32)
-
-            # Use the first two points to compute angle
-            pt1, pt2 = pts[0], pts[1]
-
-            # Calculate angle in radians then convert to degrees
-            dx = pt2[0] - pt1[0]
-            dy = pt2[1] - pt1[1]
-            angle_rad = math.atan2(dy, dx)
-            angle_deg = math.degrees(angle_rad)
-            if angle_deg < 0:
-                angle_deg = 360 - angle_deg
-            print(angle_deg)
 
             # Find the bounding box of the QR code
             x, y, w, h = cv2.boundingRect(pts)
@@ -59,6 +47,17 @@ def find_qr(image, scale_factor, width, height):
                 # Calculate the scale factor to convert image space to real-world space
                 scale_factor = qr_code_size / qr_image_size  # Ratio of real-world size to image size
             else:
+                # Use the first two points to compute angle
+                pt1, pt2 = pts[0], pts[1]
+
+                # Calculate angle in radians then convert to degrees
+                dx = pt2[0] - pt1[0]
+                dy = pt2[1] - pt1[1]
+                angle_rad = math.atan2(dy, dx)
+                angle_deg = math.degrees(angle_rad)
+                if angle_deg < 0.0:
+                    angle_deg = 360 - angle_deg
+
                 # Compute vertical ratio
                 ratio = (camera_height - qr_height) / camera_height  # How far "down" the object is in camera view
 
@@ -77,18 +76,12 @@ def find_qr(image, scale_factor, width, height):
 
                 print("Ground point beneath object (in meters):", ground_position_m)
 
-                # Calculate the real-world coordinates of the QR code center on the ground
-                #world_coordinates_x = qr_center[0] * scale_factor
-                #world_coordinates_y = qr_center[1] * scale_factor
-                #cv2.putText(image, f"World Coords: X={world_coordinates_x:.2f}, Y={world_coordinates_y:.2f}",
-                #            (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
             # Draw the detected QR code and its world coordinates on the image
             cv2.polylines(image, [pts.astype(np.int32)], isClosed=True, color=(0, 255, 0), thickness=2)
 
         i += 1
 
-    return image, scale_factor, (world_coordinates_x, world_coordinates_y)
+    return image, scale_factor, (world_coordinates_x, world_coordinates_y), angle_deg
 
 
 def main():
@@ -98,7 +91,7 @@ def main():
     scale = 0
     while True:
         ret, imageFrame = cam.read()
-        imageFrame, scale, (x,y) = find_qr(imageFrame, scale, 640, 480)
+        imageFrame, scale, (x,y), angle = find_qr(imageFrame, scale, 640, 480)
         if x != 0 and y != 0:
             print(x, y)
         # Display the captured frame
