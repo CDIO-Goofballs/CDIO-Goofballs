@@ -6,16 +6,12 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 
 class Environment:
-    def __init__(self, objects, vip_object, obstacles, pickup_radius=2):
-        self.pickup_radius = pickup_radius
-
-        # Validate inputs
-        self.vip = self._offset_point(vip_object) if vip_object is not None else None
-        self.objects = [self._offset_point(obj) for obj in objects] if objects else []
-        self.main_points = ([self.vip] if self.vip else []) + self.objects
-
-        # Inflate obstacles
-        self.obstacles = [Polygon(obs).buffer(self.pickup_radius) for obs in obstacles] if obstacles else []
+    def __init__(self, objects, vip_object, obstacles, start_point=None):
+        self.start_point = start_point
+        self.vip = vip_object
+        self.objects = objects
+        self.main_points = self.objects
+        self.obstacles = obstacles
 
         # Extract obstacle vertices as extra navigation points
         self.obstacle_points = []
@@ -23,12 +19,6 @@ class Environment:
             self.obstacle_points.extend(list(poly.exterior.coords)[:-1])
 
         self.all_points = self.main_points + self.obstacle_points
-
-    def _offset_point(self, point):
-        if point is None:
-            return None
-        offset = np.array([1, 1]) / np.sqrt(2) * self.pickup_radius
-        return tuple(np.array(point) - offset)
 
     def is_visible(self, p1, p2):
         if p1 is None or p2 is None:
@@ -102,7 +92,6 @@ def christofides_tsp(dist_matrix):
         if u not in visited:
             visited.add(u)
             path.append(u)
-    path.append(path[0])  # to make it a cycle
     return path
 
 def reorder_path_to_start_with_vip(path):
@@ -172,18 +161,6 @@ def plot_path(route, env, graph):
         x, y = poly.exterior.xy
         ax.fill(x, y, color='red', alpha=0.5, label='Obstacle' if i == 0 else None)
 
-    # Draw normal objects (Balls) as circles
-    for i, obj in enumerate(env.objects):
-        circ = Circle(obj, radius=env.pickup_radius, edgecolor='black', facecolor='none',
-                      lw=1.5, label='Ball' if i == 0 else None, transform=ax.transData)
-        ax.add_patch(circ)
-
-    # Draw VIP as gold circle
-    if env.vip:
-        vip_circ = Circle(env.vip, radius=env.pickup_radius, edgecolor='black', facecolor='gold',
-                          lw=1.5, label='VIP Ball', transform=ax.transData)
-        ax.add_patch(vip_circ)
-
     # Draw turn points
     if env.obstacle_points:
         ax.scatter(*zip(*env.obstacle_points), color='blue', s=30, label='Turn Point')
@@ -193,15 +170,21 @@ def plot_path(route, env, graph):
         for i in range(len(route) - 1):
             x_vals = [route[i][0], route[i + 1][0]]
             y_vals = [route[i][1], route[i + 1][1]]
-            ax.plot(x_vals, y_vals, marker='o', linestyle='-', color='blue', label='Route' if i == 0 else None)
+            ax.plot(x_vals, y_vals, marker='o', linestyle='-', color='green', label='Route' if i == 0 else None)
         for idx, pt in enumerate(route):
             ax.text(pt[0], pt[1], str(idx), fontsize=9, ha='right')
 
-    # Annotate VIP and normal balls
-    for idx, point in enumerate(env.main_points):
-        label = "VIP Ball" if idx == 0 and env.vip else "Ball"
-        ax.text(point[0], point[1], f'{label} {idx}', fontsize=8, ha='center', va='center',
-                color='black', bbox=dict(facecolor='white', edgecolor='black', boxstyle='circle,pad=0.3'))
+    # Draw normal objects (Balls) as circles
+    for i, obj in enumerate(env.objects):
+        circ = Circle(obj, radius=2, edgecolor='black', facecolor='white',
+                      lw=1.5, transform=ax.transData, zorder = 2)
+        ax.add_patch(circ)
+
+    # Draw VIP as gold circle
+    if env.vip:
+        vip_circ = Circle(env.vip, radius=2, edgecolor='black', facecolor='gold',
+                          lw=1.5, transform=ax.transData, zorder = 2)
+        ax.add_patch(vip_circ)
 
     # Finalize layout
     ax.set_xlim(0, 160)
@@ -213,7 +196,7 @@ def plot_path(route, env, graph):
     plt.legend(by_label.values(), by_label.keys())
     plt.show()
 
-def plan_robot_path(vip, objects, cross, pickup_radius=2):
+def plan_robot_path(vip, objects, cross, start_point=None):
     if vip is None and (not objects or len(objects) == 0):
         print("No VIP or objects provided; no path to plan.")
         return []
@@ -221,9 +204,10 @@ def plan_robot_path(vip, objects, cross, pickup_radius=2):
     # Convert cross input to obstacle polygons
     obstacle_polygons = convert_cross_to_polygons(cross)
 
-    env = Environment(objects, vip, obstacle_polygons, pickup_radius)
+    env = Environment(objects, vip, obstacle_polygons, start_point)
     G = build_visibility_graph(env)
     dist_mat = compute_distance_matrix(env, G)
+
     tsp_path = christofides_tsp(dist_mat)
     ordered_path = reorder_path_to_start_with_vip(tsp_path)
     full_route = expand_full_route(env, G, ordered_path)
@@ -236,11 +220,11 @@ def plan_robot_path(vip, objects, cross, pickup_radius=2):
 
 # Example usage with missing inputs:
 if __name__ == '__main__':
-    vip = None
+    vip = (20,20)
     objects = [(50, 30), (100, 60)]
     cross = ((80, 100), (80, 40), (120, 70), (40, 70))  # Top, Bottom, Right, Left
 
-    final_path = plan_robot_path(vip, objects, cross, pickup_radius=2)
+    final_path = plan_robot_path(vip, objects, cross, start_point=(100, 10))
     print("Robot Pickup Path:")
     for pt in final_path:
         print(pt)
