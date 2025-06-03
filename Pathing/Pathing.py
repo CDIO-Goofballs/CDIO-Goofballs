@@ -3,6 +3,7 @@ import networkx as nx
 from shapely.geometry import LineString, Polygon, Point
 from itertools import combinations
 import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
 
 class Environment:
     def __init__(self, objects, vip_object, obstacles, pickup_radius=2):
@@ -130,58 +131,103 @@ def expand_full_route(env, G, tsp_path):
         route.append(env.all_points[tsp_path[-1]])
     return route
 
+def convert_cross_to_polygons(cross_points, arm_width=4):
+    """Convert cross definition to two rectangular polygons (vertical and horizontal arms)."""
+    if cross_points is None:
+        return []
+
+    top, bottom, right, left = cross_points
+    cx, cy = (top[0] + bottom[0]) / 2, (left[1] + right[1]) / 2
+
+    # Vertical arm
+    vertical = Polygon([
+        (cx - arm_width/2, top[1]),
+        (cx + arm_width/2, top[1]),
+        (cx + arm_width/2, bottom[1]),
+        (cx - arm_width/2, bottom[1])
+    ])
+
+    # Horizontal arm
+    horizontal = Polygon([
+        (left[0], cy - arm_width/2),
+        (right[0], cy - arm_width/2),
+        (right[0], cy + arm_width/2),
+        (left[0], cy + arm_width/2)
+    ])
+
+    return [vertical, horizontal]
+
+
 def plot_path(route, env, graph):
     fig, ax = plt.subplots(figsize=(10, 8))
+
+    # Plot area boundary
     ax.plot([0, 160, 160, 0, 0], [0, 0, 120, 120, 0], color='black', linestyle='--')
 
+    # Ensure aspect ratio for accurate circle size
+    ax.set_aspect('equal', adjustable='box')
+
+    # Draw inflated obstacles
     for i, poly in enumerate(env.obstacles):
         x, y = poly.exterior.xy
         ax.fill(x, y, color='red', alpha=0.5, label='Obstacle' if i == 0 else None)
 
-    if env.objects:
-        ax.scatter(*zip(*env.objects), color='green', s=50, label='Normal Object')
+    # Draw normal objects (Balls) as circles
+    for i, obj in enumerate(env.objects):
+        circ = Circle(obj, radius=env.pickup_radius, edgecolor='black', facecolor='none',
+                      lw=1.5, label='Ball' if i == 0 else None, transform=ax.transData)
+        ax.add_patch(circ)
+
+    # Draw VIP as gold circle
     if env.vip:
-        ax.scatter(*[env.vip], color='gold', s=70, edgecolors='black', label='VIP Object')
+        vip_circ = Circle(env.vip, radius=env.pickup_radius, edgecolor='black', facecolor='gold',
+                          lw=1.5, label='VIP Ball', transform=ax.transData)
+        ax.add_patch(vip_circ)
 
-    # Mark turn points
-    turn_points = env.obstacle_points
-    if turn_points:
-        ax.scatter(*zip(*turn_points), color='blue', s=30, label='Turn Point')
+    # Draw turn points
+    if env.obstacle_points:
+        ax.scatter(*zip(*env.obstacle_points), color='blue', s=30, label='Turn Point')
 
+    # Draw path route
     if route:
         for i in range(len(route) - 1):
-            x_vals = [route[i][0], route[i+1][0]]
-            y_vals = [route[i][1], route[i+1][1]]
+            x_vals = [route[i][0], route[i + 1][0]]
+            y_vals = [route[i][1], route[i + 1][1]]
             ax.plot(x_vals, y_vals, marker='o', linestyle='-', color='blue', label='Route' if i == 0 else None)
-
         for idx, pt in enumerate(route):
             ax.text(pt[0], pt[1], str(idx), fontsize=9, ha='right')
 
+    # Annotate VIP and normal balls
     for idx, point in enumerate(env.main_points):
-        label = "VIP Object" if idx == 0 and env.vip else "Normal Object"
+        label = "VIP Ball" if idx == 0 and env.vip else "Ball"
         ax.text(point[0], point[1], f'{label} {idx}', fontsize=8, ha='center', va='center',
                 color='black', bbox=dict(facecolor='white', edgecolor='black', boxstyle='circle,pad=0.3'))
 
+    # Finalize layout
     ax.set_xlim(0, 160)
     ax.set_ylim(0, 120)
     ax.set_title("Robot Path Plan with Obstacle Avoidance")
-    ax.set_aspect('equal')
     plt.grid(True)
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
     plt.legend(by_label.values(), by_label.keys())
     plt.show()
 
-def plan_robot_path(vip, objects, obstacle_polygons, pickup_radius=2):
+def plan_robot_path(vip, objects, cross, pickup_radius=2):
     if vip is None and (not objects or len(objects) == 0):
         print("No VIP or objects provided; no path to plan.")
         return []
+
+    # Convert cross input to obstacle polygons
+    obstacle_polygons = convert_cross_to_polygons(cross)
+
     env = Environment(objects, vip, obstacle_polygons, pickup_radius)
     G = build_visibility_graph(env)
     dist_mat = compute_distance_matrix(env, G)
     tsp_path = christofides_tsp(dist_mat)
     ordered_path = reorder_path_to_start_with_vip(tsp_path)
     full_route = expand_full_route(env, G, ordered_path)
+
     if full_route:
         plot_path(full_route, env, G)
     else:
@@ -191,10 +237,10 @@ def plan_robot_path(vip, objects, obstacle_polygons, pickup_radius=2):
 # Example usage with missing inputs:
 if __name__ == '__main__':
     vip = None
-    objects = [(31,15), (80,72)]  # Empty list simulating lost objects
-    obstacles = []  # No obstacles
+    objects = [(50, 30), (100, 60)]
+    cross = ((80, 100), (80, 40), (120, 70), (40, 70))  # Top, Bottom, Right, Left
 
-    final_path = plan_robot_path(vip, objects, obstacles, pickup_radius=2)
+    final_path = plan_robot_path(vip, objects, cross, pickup_radius=2)
     print("Robot Pickup Path:")
     for pt in final_path:
         print(pt)
