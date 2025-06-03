@@ -1,9 +1,9 @@
 import numpy as np
 import networkx as nx
-from shapely.geometry import LineString, Polygon, Point
+from shapely.geometry import LineString, Polygon
 from scipy.spatial import distance_matrix
 from itertools import combinations
-import math
+import matplotlib.pyplot as plt
 
 # -------------------------------
 # Environment & Geometry Helpers
@@ -18,7 +18,7 @@ class Environment:
     def is_visible(self, p1, p2):
         line = LineString([p1, p2])
         for obstacle in self.obstacles:
-            if line.crosses(obstacle) or line.within(obstacle):
+            if line.crosses(obstacle) or line.within(obstacle) or line.intersects(obstacle):
                 return False
         return True
 
@@ -32,8 +32,19 @@ def build_visibility_graph(env):
         p1, p2 = points[i], points[j]
         if env.is_visible(p1, p2):
             dist = np.linalg.norm(np.array(p1) - np.array(p2))
-            G.add_edge(i, j, weight=dist)
+            turn_cost = compute_turn_cost(p1, p2)
+            total_cost = dist + turn_cost
+            G.add_edge(i, j, weight=total_cost)
+    # Ensure all nodes are added
+    for idx in range(len(points)):
+        G.add_node(idx)
     return G
+
+# ------------------------
+# Direction Change Penalty
+# ------------------------
+def compute_turn_cost(p1, p2):
+    return 1  # unit cost for needing to stop and turn
 
 # ------------------
 # Path Length Matrix
@@ -46,11 +57,12 @@ def compute_distance_matrix(env, G):
             if i == j:
                 dist_matrix[i][j] = 0
             else:
-                try:
-                    path_len = nx.shortest_path_length(G, i, j, weight='weight')
-                    dist_matrix[i][j] = path_len
-                except nx.NetworkXNoPath:
-                    pass
+                if G.has_node(i) and G.has_node(j):
+                    try:
+                        path_len = nx.shortest_path_length(G, i, j, weight='weight')
+                        dist_matrix[i][j] = path_len
+                    except nx.NetworkXNoPath:
+                        pass
     return dist_matrix
 
 # -------------------------
@@ -61,13 +73,15 @@ def christofides_tsp(dist_matrix):
     n = len(dist_matrix)
     for i in range(n):
         for j in range(i + 1, n):
-            G.add_edge(i, j, weight=dist_matrix[i][j])
+            if not np.isinf(dist_matrix[i][j]):
+                G.add_edge(i, j, weight=dist_matrix[i][j])
 
     T = nx.minimum_spanning_tree(G)
     odd_deg = [v for v in T.nodes if T.degree[v] % 2 == 1]
     M = nx.Graph()
     for i, j in combinations(odd_deg, 2):
-        M.add_edge(i, j, weight=dist_matrix[i][j])
+        if not np.isinf(dist_matrix[i][j]):
+            M.add_edge(i, j, weight=dist_matrix[i][j])
     matching = nx.algorithms.matching.max_weight_matching(M, maxcardinality=True, weight='weight')
 
     multigraph = nx.MultiGraph()
@@ -101,7 +115,33 @@ def plan_robot_path(vip, objects, obstacle_polygons):
     tsp_path = christofides_tsp(dist_mat)
     ordered_path = reorder_path_to_start_with_vip(tsp_path)
     coords_path = [env.all_points[i] for i in ordered_path]
+    plot_path(coords_path, env.obstacles, G, env.all_points)
     return coords_path
+
+# -------------------
+# Plotting Function
+# -------------------
+def plot_path(path, obstacles, graph, all_points):
+    fig, ax = plt.subplots()
+    # Draw full graph edges to reflect possible routes
+    for (u, v) in graph.edges():
+        x_vals = [all_points[u][0], all_points[v][0]]
+        y_vals = [all_points[u][1], all_points[v][1]]
+        ax.plot(x_vals, y_vals, linestyle='dotted', color='gray', alpha=0.5)
+    # Draw the final computed path
+    for i in range(len(path) - 1):
+        x_vals = [path[i][0], path[i+1][0]]
+        y_vals = [path[i][1], path[i+1][1]]
+        ax.plot(x_vals, y_vals, marker='o', linestyle='-', color='blue')
+    for poly in obstacles:
+        x, y = poly.exterior.xy
+        ax.fill(x, y, color='red', alpha=0.5)
+    for idx, pt in enumerate(path):
+        ax.text(pt[0], pt[1], str(idx), fontsize=9, ha='right')
+    ax.set_title("Robot Path Plan")
+    ax.set_aspect('equal')
+    plt.grid(True)
+    plt.show()
 
 # -----------------
 # Example Usage:
