@@ -1,7 +1,6 @@
 import numpy as np
 import networkx as nx
-from shapely.geometry import LineString, Polygon
-from scipy.spatial import distance_matrix
+from shapely.geometry import LineString, Polygon, Point
 from itertools import combinations
 import matplotlib.pyplot as plt
 
@@ -12,13 +11,27 @@ class Environment:
     def __init__(self, objects, vip_object, obstacles):
         self.vip = vip_object
         self.objects = objects  # list of 10 (x, y) tuples
-        self.all_points = [vip_object] + objects
         self.obstacles = [Polygon(obs) for obs in obstacles]  # list of polygons
+        
+        # Collect obstacle corners as points
+        self.obstacle_points = []
+        for poly in self.obstacles:
+            self.obstacle_points.extend(list(poly.exterior.coords)[:-1])  # exclude repeated last point
+
+        # All points = vip + objects + obstacle corners
+        self.main_points = [vip_object] + objects
+        self.all_points = self.main_points + self.obstacle_points
 
     def is_visible(self, p1, p2):
         line = LineString([p1, p2])
+        # Check line against all obstacles; line touching polygon edge is allowed, but crossing is not
         for obstacle in self.obstacles:
-            if line.crosses(obstacle) or line.within(obstacle) or line.intersects(obstacle):
+            if line.crosses(obstacle) or line.within(obstacle):
+                return False
+            # intersection at a single point on boundary is OK (e.g. touching corner)
+            inter = line.intersection(obstacle)
+            if not inter.is_empty and not (inter.geom_type == 'Point' or inter.geom_type == 'MultiPoint'):
+                # If intersection is a line or polygon, reject
                 return False
         return True
 
@@ -32,37 +45,29 @@ def build_visibility_graph(env):
         p1, p2 = points[i], points[j]
         if env.is_visible(p1, p2):
             dist = np.linalg.norm(np.array(p1) - np.array(p2))
-            turn_cost = compute_turn_cost(p1, p2)
-            total_cost = dist + turn_cost
-            G.add_edge(i, j, weight=total_cost)
-    # Ensure all nodes are added
+            # Turn cost could be refined, but for now no added cost here
+            G.add_edge(i, j, weight=dist)
+    # Ensure all nodes are added (in case isolated)
     for idx in range(len(points)):
         G.add_node(idx)
     return G
-
-# ------------------------
-# Direction Change Penalty
-# ------------------------
-def compute_turn_cost(p1, p2):
-    return 1  # unit cost for needing to stop and turn
 
 # ------------------
 # Path Length Matrix
 # ------------------
 def compute_distance_matrix(env, G):
-    n = len(env.all_points)
+    n = len(env.main_points)  # Only main points for TSP
     dist_matrix = np.full((n, n), np.inf)
-    for i in range(n):
-        for j in range(n):
+    main_indices = range(n)  # main points are first n in env.all_points
+    for i in main_indices:
+        for j in main_indices:
             if i == j:
                 dist_matrix[i][j] = 0
             else:
-                if G.has_node(i) and G.has_node(j):
-                    try:
-                        path_len = nx.shortest_path_length(G, i, j, weight='weight')
-                        dist_matrix[i][j] = path_len
-                    except nx.NetworkXNoPath:
-                        pass
+                try:
+                    dist_matrix[i][j] = nx.shortest_path_length(G, source=i, target=j, weight='weight')
+                except nx.NetworkXNoPath:
+                    dist_matrix[i][j] = np.inf
     return dist_matrix
 
 # -------------------------
@@ -105,6 +110,23 @@ def reorder_path_to_start_with_vip(path):
     vip_index = path.index(0)  # VIP is always at index 0
     return path[vip_index:] + path[1:vip_index+1]
 
+# -------------------------------------
+# Expand TSP path to full route coords
+# -------------------------------------
+def expand_full_route(env, G, tsp_path):
+    route = []
+    for i in range(len(tsp_path) - 1):
+        source = tsp_path[i]
+        target = tsp_path[i+1]
+        # Get shortest path in visibility graph between source and target
+        subpath_indices = nx.shortest_path(G, source=source, target=target, weight='weight')
+        # Append all points except last to avoid duplicates, last will be start of next segment
+        for idx in subpath_indices[:-1]:
+            route.append(env.all_points[idx])
+    # Add last point explicitly
+    route.append(env.all_points[tsp_path[-1]])
+    return route
+
 # ----------------------
 # Public Entry Function
 # ----------------------
@@ -114,31 +136,37 @@ def plan_robot_path(vip, objects, obstacle_polygons):
     dist_mat = compute_distance_matrix(env, G)
     tsp_path = christofides_tsp(dist_mat)
     ordered_path = reorder_path_to_start_with_vip(tsp_path)
-    coords_path = [env.all_points[i] for i in ordered_path]
-    plot_path(coords_path, env.obstacles, G, env.all_points)
-    return coords_path
+    full_route = expand_full_route(env, G, ordered_path)
+    plot_path(full_route, env.obstacles, G, env.all_points, env.main_points)
+    return full_route
 
 # -------------------
 # Plotting Function
 # -------------------
-def plot_path(path, obstacles, graph, all_points):
+def plot_path(route, obstacles, graph, all_points, main_points):
     fig, ax = plt.subplots()
-    # Draw full graph edges to reflect possible routes
-    for (u, v) in graph.edges():
-        x_vals = [all_points[u][0], all_points[v][0]]
-        y_vals = [all_points[u][1], all_points[v][1]]
-        ax.plot(x_vals, y_vals, linestyle='dotted', color='gray', alpha=0.5)
-    # Draw the final computed path
-    for i in range(len(path) - 1):
-        x_vals = [path[i][0], path[i+1][0]]
-        y_vals = [path[i][1], path[i+1][1]]
-        ax.plot(x_vals, y_vals, marker='o', linestyle='-', color='blue')
+    # Draw obstacles
     for poly in obstacles:
         x, y = poly.exterior.xy
         ax.fill(x, y, color='red', alpha=0.5)
-    for idx, pt in enumerate(path):
-        ax.text(pt[0], pt[1], str(idx), fontsize=9, ha='right')
-    ax.set_title("Robot Path Plan")
+        
+    # Draw visibility graph edges
+    # for (u, v) in graph.edges():
+    #     x_vals = [all_points[u][0], all_points[v][0]]
+    #     y_vals = [all_points[u][1], all_points[v][1]]
+    #     ax.plot(x_vals, y_vals, linestyle='dotted', color='gray', alpha=0.3)
+
+    # Draw route path
+    x_vals = [p[0] for p in route]
+    y_vals = [p[1] for p in route]
+    ax.plot(x_vals, y_vals, marker='o', linestyle='-', color='blue')
+
+    # Mark main points (VIP + objects)
+    for idx, pt in enumerate(main_points):
+        ax.scatter(pt[0], pt[1], c='green' if idx == 0 else 'orange', s=80, zorder=5)
+        ax.text(pt[0], pt[1], f'M{idx}' if idx > 0 else 'VIP', fontsize=9, ha='right')
+
+    ax.set_title("Robot Path Plan (avoiding obstacles)")
     ax.set_aspect('equal')
     plt.grid(True)
     plt.show()
