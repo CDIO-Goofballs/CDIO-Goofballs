@@ -149,7 +149,7 @@ def plot_path(route, obstacles, graph, all_points, main_points):
     for poly in obstacles:
         x, y = poly.exterior.xy
         ax.fill(x, y, color='red', alpha=0.5)
-        
+
     # Draw visibility graph edges
     # for (u, v) in graph.edges():
     #     x_vals = [all_points[u][0], all_points[v][0]]
@@ -166,7 +166,7 @@ def plot_path(route, obstacles, graph, all_points, main_points):
         ax.scatter(pt[0], pt[1], c='green' if idx == 0 else 'orange', s=80, zorder=5)
         ax.text(pt[0], pt[1], f'M{idx}' if idx > 0 else 'VIP', fontsize=9, ha='right')
 
-    ax.set_title("Robot Path Plan (avoiding obstacles)")
+    ax.set_title("Robot Path Plan")
     ax.set_aspect('equal')
     plt.grid(True)
     plt.show()
@@ -175,10 +175,27 @@ def plot_path(route, obstacles, graph, all_points, main_points):
 # Example Usage:
 # -----------------
 if __name__ == '__main__':
-    vip = (5, 5)
-    objects = [(10, 3), (2, 8), (15, 6), (9, 12), (6, 17), (13, 14), (1, 1), (16, 2), (7, 8), (4, 13)]
-    obstacles = [[(7, 7), (9, 7), (9, 9), (7, 9)], [(11, 10), (14, 10), (14, 13), (11, 13)]]
-
+    import random
+    
+    # Generate random VIP position (between 0 and 20)
+    vip = (random.uniform(0, 20), random.uniform(0, 20))
+    
+    # Generate 10 random object positions
+    objects = []
+    for _ in range(10):
+        objects.append((random.uniform(0, 20), random.uniform(0, 20)))
+    
+    # Generate 2-4 random rectangular obstacles
+    obstacles = []
+    for _ in range(random.randint(2, 4)):
+        # Create a random rectangle
+        x = random.uniform(0, 15)
+        y = random.uniform(0, 15)
+        width = random.uniform(1, 4)
+        height = random.uniform(1, 4)
+        # Add rectangle as polygon points (clockwise)
+        obstacles.append([(x, y), (x + width, y), (x + width, y + height), (x, y + height)])
+    
     final_path = plan_robot_path(vip, objects, obstacles)
     print("Robot Pickup Path:")
     for pt in final_path:
