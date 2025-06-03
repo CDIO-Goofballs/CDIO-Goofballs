@@ -1,15 +1,6 @@
 import cv2
-from ColorRecognition import color_recognition
-from RoboFlow import object_recognition
-from CoordinateMapping import find_qr
-
-cam = cv2.VideoCapture(1)
-
-# Get the default frame width and height
-frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-print(frame_width, frame_height)
+from ImageRecognition.RoboFlow.RoboFlow import object_recognition
+from ImageRecognition.RoboFlow.CoordinateMapping import find_qr
 
 scale_factor = 1
 latest_position = None
@@ -23,6 +14,12 @@ small_goal = None
 
 def start_image_recognition():
     global scale_factor, latest_position, latest_angle, balls, vip_ball, walls, egg, cross, small_goal
+    cam = cv2.VideoCapture(0)
+
+    # Get the default frame width and height
+    frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
     while True:
         ret, imageFrame = cam.read()
 
@@ -101,4 +98,3 @@ def small_goal():
     :return: None if no small goal is detected, otherwise a tuple (x, y) representing the position of the small goal.
     """
     return small_goal
-
