@@ -1,20 +1,24 @@
 import cv2
 from ColorRecognition import color_recognition
 from RoboFlow import object_recognition
+from CoordinateMapping import find_qr
 
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture(1)
 
 # Get the default frame width and height
 frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+print(frame_width, frame_height)
 
 while True:
     ret, imageFrame = cam.read()
 
     print('--------------Start------------------')
 
+    imageFrame, ratio = find_qr(imageFrame)
     imageFrame, latest_angle, latest_position, distance = color_recognition(imageFrame)
-    imageFrame, ratio = object_recognition(imageFrame)
+    imageFrame = object_recognition(imageFrame)
 
     if distance > 0:
         print(distance * ratio)

@@ -28,8 +28,6 @@ balls = []
 vip_balls = []
 walls = []
 
-ratio = 10
-
 def longest_distance(points):
     max_dist = 0
     for i in range(len(points)):
@@ -64,7 +62,6 @@ def object_recognition(img):
                 #print(f"x: {prediction.x}, y: {prediction.y}")
             case "Wall":
                 walls.append(prediction.points)
-                print(f"Wall length: {longest_distance(prediction.points) * ratio}")
             case "Cross":
                 print(prediction.points)
 
@@ -73,7 +70,6 @@ def object_recognition(img):
         for wall in walls:
             distance += longest_distance(wall)
         print(distance)
-        ratio = (112*2+172*2) / distance
 
     # load the results into the supervision Detections api
     detections = sv.Detections.from_inference(results)
@@ -91,4 +87,4 @@ def object_recognition(img):
     annotated_image = label_annotator.annotate(
         scene=annotated_image, detections=detections)
 
-    return annotated_image, ratio
+    return annotated_image
