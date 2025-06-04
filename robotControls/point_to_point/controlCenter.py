@@ -9,11 +9,21 @@ from point import Point
 ev3_ip = '192.168.137.30'
 port = 12345
 
+"""
+Square
 positions = [
     Point(0,0),
     Point(200,0),
     Point(200,200),
     Point(0,200),
+    Point(0,0)
+] """
+positions = [
+    Point(0,0),
+    Point(100,100),
+    Point(160,0),
+    Point(160,-120),
+    Point(40,100),
     Point(0,0)
 ]
 robot_start_angle = 0 # 0 is straight up
@@ -47,7 +57,8 @@ def points_to_commands(robot_start_angle, positions):
 def send_commands(commands):
     for command in commands:
         send_command(command)
-#go_to_list_of_points(robot_start_angle = 0, positions = positions)
+
+send_commands(points_to_commands(robot_start_angle=0, positions=positions))
 
 
 keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
