@@ -34,13 +34,13 @@ def run_image_recognition():
     imageFrame, balls, vip_ball, wall_corners, cross, egg, small_goal = object_recognition(imageFrame, scale_factor)
 
     # Display the captured frame
-    cv2.imshow("ImageRecognition", imageFrame)
+    #cv2.imshow("ImageRecognition", imageFrame)
 
 
 def stop_image_recognition():
     # Release the capture and writer objects
     cam.release()
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
 
 # Function to get the latest angle, position, and other recognized objects
 def get_angle():

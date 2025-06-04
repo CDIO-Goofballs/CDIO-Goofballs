@@ -23,8 +23,7 @@ qr_height = 0
 def find_qr(image, scale_factor, width, height):
     # Detect QR code(s)
     retval, decoded_info, polygons, straight_qrcode = qr.detectAndDecodeMulti(image)
-    world_coordinates_x = 0
-    world_coordinates_y = 0
+    position = None
     angle_deg = 0
 
     i = 0
@@ -74,6 +73,8 @@ def find_qr(image, scale_factor, width, height):
                 # Convert to meters from pixel coordinates
                 ground_position_m = ground_pixel * scale_factor
 
+                position = (ground_position_m[0], ground_position_m[1])
+
                 print("Ground point beneath object (in meters):", ground_position_m)
 
             # Draw the detected QR code and its world coordinates on the image
@@ -81,7 +82,7 @@ def find_qr(image, scale_factor, width, height):
 
         i += 1
 
-    return image, scale_factor, (world_coordinates_x, world_coordinates_y), angle_deg
+    return image, scale_factor, position, angle_deg
 
 
 def main():
