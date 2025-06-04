@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_B, MoveSteering, MoveDifferential, MoveTank, SpeedPercent, SpeedDPM, follow_for_ms, FollowGyroAngleErrorTooFast
+from ev3dev2.motor import MediumMotor, LargeMotor, OUTPUT_A, OUTPUT_B, OUTPUT_D, MoveSteering, MoveDifferential, MoveTank, SpeedPercent, SpeedDPM, follow_for_ms, FollowGyroAngleErrorTooFast
 from ev3dev2.sensor import INPUT_1, INPUT_2, INPUT_3, INPUT_4
 from ev3dev2.sensor.lego import GyroSensor
 from ev3dev2.wheel import EV3Tire
@@ -13,6 +13,10 @@ queue = queue.Queue()
 # Initialize the motors.
 motorA = LargeMotor(OUTPUT_A)
 motorB = LargeMotor(OUTPUT_B)
+servo = MediumMotor(OUTPUT_D)
+
+servo_on = False # Flag to stop servo from rotating the plate into the exit pipe or ground.
+servo.reset()
 
 tank = MoveTank(OUTPUT_A, OUTPUT_B)
 steering = MoveSteering(OUTPUT_A, OUTPUT_B)
@@ -121,11 +125,22 @@ def execute_command():
         arg = command[1]
         print("Got command: ", (cmd, arg))
         if(cmd == "drive"): straight(-float(arg)) # Invert directionen since front is back.
-        if(cmd == "backwards"): straight(float(arg))
+        elif(cmd == "backwards"): straight(float(arg))
         elif(cmd == "turn"): rotate_robot(float(arg))
-        #elif(cmd== "test"): test()
+        elif(cmd == "servo"): toggle_servo(int(arg))
         time.sleep(0.1)
 
+def toggle_servo(enable):
+    global servo_on
+    if enable == 1 and not servo_on:
+        servo_on = True
+        servo.on_to_position(SpeedPercent(20), 90)
+    else:
+        if not servo_on:
+            return
+        servo_on = False
+        servo.on_to_position(SpeedPercent(20), -90)
+    servo.off()
 
 def check_for_commands(conn):
     try:
@@ -134,20 +149,22 @@ def check_for_commands(conn):
             if not data:
                 break
 
-            commands = data.decode().strip().split(',')
-            print("Command received:", commands)
-            command = commands.pop(0)
-            
-            if(command == "stop"): 
-                stop()
-                continue
-            else:
-                stop_event.clear()
-            if(len(commands) > 0):
-                arg = commands.pop(0)
-                queue.put((command, arg))
-            else: queue.put((command, None))
-            time.sleep(0.1)
+            commands = data.decode().strip().rstrip(';').split(';') # Remove trailing semicolon to prevent empty string at the end
+            print(commands)
+            for cmd in commands:
+                print(cmd)
+                cmds = cmd.split(',')
+                cmd_name = cmds[0].strip()
+                if(cmd_name == "stop"): 
+                    stop()
+                    continue
+                else:
+                    stop_event.clear()
+                if(len(commands) > 0):
+                    arg = cmds[1].strip()
+                    queue.put((cmd_name, arg))
+                else: queue.put((cmd_name, None))
+                time.sleep(0.1)
             
     finally:
         stop()
@@ -156,7 +173,7 @@ def check_for_commands(conn):
         print("Connection closed")
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-    server_socket.bind(('', 12345))
+    server_socket.bind(('', 12346))
     server_socket.listen(1)
 
     print("Waiting for connection...")
