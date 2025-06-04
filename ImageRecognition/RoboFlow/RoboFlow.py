@@ -1,43 +1,36 @@
-import math
-
-from sklearn.linear_model import LinearRegression
-
-from inference_sdk import InferenceHTTPClient
 from inference import get_model
 import supervision as sv
-import cv2
-from sympy.strategies.core import switch
 
 model = get_model(model_id="oob_cdio-kghp5/9", api_key="VD9BLusLGWoKvrez3ufK")
 
-cam = cv2.VideoCapture(1)
-
-# Get the default frame width and height
-frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
 balls = []
 vip_ball = None
-walls = []
+wall_points = []
 egg = None
 cross = None
 small_goal = None
+wall_corners = None
 
 def point_x(point):
   return point.x
 def point_y(point):
   return point.y
+def point_xplusy(point):
+    return point[0] + point[1]
+def point_xminusy(point):
+    return point[0] - point[1]
 
 def object_recognition(img, scale_factor):
     global vip_ball
     global cross
     global egg
     global small_goal
+    global wall_corners
     # run inference on our chosen image, image can be a url, a numpy array, a PIL image, etc.
     balls.clear()
     vip_ball = None
-    walls.clear()
-    cross = []
+    wall_points.clear()
+    cross = None
     egg = None
     small_goal = None
 
@@ -51,12 +44,15 @@ def object_recognition(img, scale_factor):
             case "Vip":
                 vip_ball = (prediction.x * scale_factor, prediction.y * scale_factor)
             case "Wall":
-                walls.append([(scale_factor * point.x, scale_factor * point.y) for point in prediction.points])
+                for point in prediction.points:
+                    wall_points.append( (scale_factor * point.x, scale_factor * point.y) )
             case "Cross":
-                top = prediction.points.sort(key = point_y)[0]
-                bottom = prediction.points.sort(key = point_y, reverse=True)[0]
-                right = prediction.points.sort(key = point_x)[0]
-                left = prediction.points.sort(key = point_x, reverse=True)[0]
+                y_sort = sorted(prediction.points, key=point_y)
+                top = (y_sort[0].x * scale_factor, y_sort[0].y * scale_factor)
+                bottom = (y_sort[-1].x * scale_factor, y_sort[-1].y * scale_factor)
+                x_sort = sorted(prediction.points, key=point_x)
+                left = (x_sort[0].x * scale_factor, x_sort[0].y * scale_factor)
+                right = (x_sort[-1].x * scale_factor, x_sort[-1].y * scale_factor)
                 cross = (top, bottom, right, left)
             case "Eggman":
                 egg = (prediction.x * scale_factor, prediction.y * scale_factor)
@@ -79,4 +75,13 @@ def object_recognition(img, scale_factor):
     annotated_image = label_annotator.annotate(
         scene=annotated_image, detections=detections)
 
-    return annotated_image, balls, vip_ball, walls, cross, egg, small_goal
+    if wall_points:
+        xplusy_sort = sorted(wall_points, key=point_xplusy)
+        xminusy_sort = sorted(wall_points, key=point_xminusy)
+        top_left = xplusy_sort[0]
+        bottom_right = xplusy_sort[-1]
+        bottom_left = xminusy_sort[0]
+        top_right = xminusy_sort[-1]
+        wall_corners = (top_left, bottom_left, bottom_right, top_right)
+
+    return annotated_image, balls, vip_ball, wall_corners, cross, egg, small_goal

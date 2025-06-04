@@ -1,3 +1,5 @@
+import time
+
 import cv2
 from ImageRecognition.RoboFlow.RoboFlow import object_recognition
 from ImageRecognition.RoboFlow.CoordinateMapping import find_qr
@@ -7,14 +9,16 @@ latest_position = None
 latest_angle = 0
 balls = []
 vip_ball = None
-walls = []
+wall_corners = None
 egg = None
 cross = None
 small_goal = None
+frame_width = 640  # Default width, can be adjusted
+frame_height = 480  # Default height, can be adjusted
 
 def start_image_recognition():
-    global scale_factor, latest_position, latest_angle, balls, vip_ball, walls, egg, cross, small_goal
-    cam = cv2.VideoCapture(0)
+    global scale_factor, latest_position, latest_angle, balls, vip_ball, wall_corners, egg, cross, small_goal, frame_height, frame_width
+    cam = cv2.VideoCapture(1)
 
     # Get the default frame width and height
     frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -27,7 +31,7 @@ def start_image_recognition():
 
         imageFrame, scale_factor, latest_position, latest_angle = find_qr(imageFrame, scale_factor, frame_width,
                                                                           frame_height)
-        imageFrame, balls, vip_ball, walls, cross, egg, small_goal = object_recognition(imageFrame, scale_factor)
+        imageFrame, balls, vip_ball, wall_corners, cross, egg, small_goal = object_recognition(imageFrame, scale_factor)
 
         print('--------------End--------------------\n')
 
@@ -74,12 +78,12 @@ def get_vip_ball():
     :return: None if no VIP ball is detected, otherwise a tuple (x, y) representing the position of the VIP ball.
     """
     return vip_ball
-def get_walls():
+def get_wall_corners():
     """
-    Returns the list of detected walls.
-    TODO
+    Returns the list of detected wall corners.
+    :return: None if no walls are detected, otherwise the corners as (top_left, bottom_left, bottom_right, top_right).
     """
-    return walls
+    return wall_corners
 def get_cross():
     """
     Returns the cross position.
@@ -92,9 +96,15 @@ def get_egg():
     :return: None if no egg is detected, otherwise a tuple (x, y) representing the position of the egg.
     """
     return egg
-def small_goal():
+def get_small_goal():
     """
     Returns the small goal position.
     :return: None if no small goal is detected, otherwise a tuple (x, y) representing the position of the small goal.
     """
     return small_goal
+def get_size():
+    """
+    Returns the size of the image frame used for scaling.
+    :return:
+    """
+    return frame_width * scale_factor, frame_height * scale_factor  # Assuming a default size of 640x480

@@ -1,9 +1,15 @@
+import math
+
+import numpy as np
 from shapely.geometry import Point, LineString, Polygon
 import networkx as nx
 import itertools
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPolygon, Circle
 import random
+
+from ImageRecognition.RoboFlow.MainImageRecognition import wall_corners
+
 
 def is_visible(p1, p2, obstacles):
     """
@@ -67,9 +73,12 @@ def compute_distance_matrix(G, all_nodes, points_indices):
     for i in range(n):
         for j in range(n):
             if i != j:
-                pth = nx.shortest_path(G, source=points_indices[i], target=points_indices[j], weight='weight')
-                dist[i][j] = nx.shortest_path_length(G, source=points_indices[i], target=points_indices[j], weight='weight')
-                paths[i][j] = [all_nodes[idx] for idx in pth]
+                try:
+                    pth = nx.shortest_path(G, source=points_indices[i], target=points_indices[j], weight='weight')
+                    dist[i][j] = nx.shortest_path_length(G, source=points_indices[i], target=points_indices[j], weight='weight')
+                    paths[i][j] = [all_nodes[idx] for idx in pth]
+                except:
+                    print(f"Path not found between {points_indices[i]} and {points_indices[j]}")
 
     return dist, paths
 
@@ -144,44 +153,94 @@ def plan_route_free_space(start, vip, others, end, obstacles):
     else:
         best_order, best_length = solve_tsp_no_vip(dist)
 
-    full_path = reconstruct_full_path(paths, best_order)
-    return best_order, best_length, full_path, vip is not None
+    if best_order:
+        full_path = reconstruct_full_path(paths, best_order)
+        return best_order, best_length, full_path, vip is not None
+    else:
+        return [], 0, [], vip is not None
 
 
 def convert_cross_to_polygons(cross_points, arm_width=4):
     """
     Convert a cross defined by 4 points (top, bottom, right, left)
-    into two rectangular polygons: vertical and horizontal arms.
+    into two rectangular polygons (vertical and horizontal arms),
+    even if the cross is rotated.
 
-    cross_points: (top, bottom, right, left)
-    arm_width: width of the cross arms (default 4)
+    Parameters:
+        cross_points: tuple of 4 points (top, bottom, right, left)
+        arm_width: width of the cross arms
+    Returns:
+        List of two shapely Polygons (vertical arm, horizontal arm)
     """
     if cross_points is None or len(cross_points) != 4:
         return []
 
     top, bottom, right, left = cross_points
-    cx = (left[0] + right[0]) / 2
-    cy = (top[1] + bottom[1]) / 2
+    top = np.array(top)
+    bottom = np.array(bottom)
+    left = np.array(left)
+    right = np.array(right)
 
-    # Vertical arm polygon
-    vertical = Polygon([
-        (cx - arm_width/2, top[1]),
-        (cx + arm_width/2, top[1]),
-        (cx + arm_width/2, bottom[1]),
-        (cx - arm_width/2, bottom[1])
+    def create_arm(p1, p2):
+        """Create a rectangle between p1 and p2 with given width."""
+        direction = p2 - p1
+        length = np.linalg.norm(direction)
+        if length == 0:
+            return None
+        direction = direction / length
+        normal = np.array([-direction[1], direction[0]])  # Rotate 90 degrees
+        offset = normal * (arm_width / 2)
+
+        return Polygon([
+            tuple(p1 + offset),
+            tuple(p2 + offset),
+            tuple(p2 - offset),
+            tuple(p1 - offset)
+        ])
+
+    vertical = create_arm(top, bottom)
+    horizontal = create_arm(left, right)
+
+    polygons = []
+    if vertical: polygons.append(vertical)
+    if horizontal: polygons.append(horizontal)
+    return polygons
+
+def create_wall_polygon(p1, p2, thickness=1.5):
+    """
+    Create a thin rectangular polygon between two points, offset perpendicular to the direction.
+    """
+    dx, dy = p2[0] - p1[0], p2[1] - p1[1]
+    length = math.hypot(dx, dy)
+    if length == 0:
+        return None
+
+    # Unit perpendicular vector (normalized)
+    nx, ny = -dy / length, dx / length
+    offset_x, offset_y = nx * thickness / 2, ny * thickness / 2
+
+    # Rectangle corners
+    return Polygon([
+        (p1[0] + offset_x, p1[1] + offset_y),
+        (p2[0] + offset_x, p2[1] + offset_y),
+        (p2[0] - offset_x, p2[1] - offset_y),
+        (p1[0] - offset_x, p1[1] - offset_y)
     ])
 
-    # Horizontal arm polygon
-    horizontal = Polygon([
-        (left[0], cy - arm_width/2),
-        (right[0], cy - arm_width/2),
-        (right[0], cy + arm_width/2),
-        (left[0], cy + arm_width/2)
-    ])
+def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
+    """
+    Given 4 corners: (top_left, bottom_left, bottom_right, top_right),
+    returns 4 wall polygons forming the boundary.
+    """
+    top_left, bottom_left, bottom_right, top_right = wall_corners
+    return [
+        create_wall_polygon(top_left, top_right, thickness),     # Top wall
+        create_wall_polygon(top_right, bottom_right, thickness), # Right wall
+        create_wall_polygon(bottom_right, bottom_left, thickness), # Bottom wall
+        create_wall_polygon(bottom_left, top_left, thickness)    # Left wall
+    ]
 
-    return [vertical, horizontal]
-
-def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vip, ball_diameter=4):
+def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vip, width, height, ball_diameter=4):
     fig, ax = plt.subplots(figsize=(10,8))
     radius = ball_diameter / 2
 
@@ -201,8 +260,9 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     ax.add_patch(Circle(end, radius, color='red', label='End'))
 
     # Path
-    xs, ys = zip(*full_path)
-    ax.plot(xs, ys, 'r-', linewidth=2, label='Planned path')
+    if full_path:
+        xs, ys = zip(*full_path)
+        ax.plot(xs, ys, 'r-', linewidth=2, label='Planned path')
 
     # Title
     if has_vip:
@@ -222,22 +282,40 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     ax.set_title(order_text)
     ax.legend()
     ax.set_aspect('equal')
-    ax.set_xlim(0, 160)
-    ax.set_ylim(0, 120)
+    ax.set_xlim(0, width)
+    ax.set_ylim(0, height)
     plt.grid(True)
     plt.show()
 
 
-def path_finding(cross, start, vip, balls, end):
-    # Convert to two rectangular obstacles (vertical + horizontal arms)
-    cross_obstacles = convert_cross_to_polygons(cross, 2)
+def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=120):
+    if not balls:
+        return []
+    if cross:
+        # Convert to two rectangular obstacles (vertical + horizontal arms)
+        cross_obstacles = convert_cross_to_polygons(cross, 2)
+    else:
+        cross_obstacles = []
 
-    # Add to main obstacle list
-    obstacles = cross_obstacles
+    if wall_corners:
+        # Build 4 boundary walls using wall_corners
+        boundary_walls = create_boundary_walls_from_corners(wall_corners, thickness=1.5)
+    else:
+        boundary_walls = []
+
+    # Combine all obstacles
+    obstacles = cross_obstacles + boundary_walls
+
+    start = (200, 200) # TODO remove later
+
+    print("Start:", start)
+    print("VIP:", vip)
+    print("Objects:", balls)
+    print("End:", end)
 
     # Plan and plot
     best_order, best_length, full_path, has_vip = plan_route_free_space(start, vip, balls, end, obstacles)
-    plot_route(start, vip, balls, end, obstacles, full_path, best_order, has_vip)
+    plot_route(start, vip, balls, end, obstacles, full_path, best_order, has_vip, width=width, height=height)
     return full_path
 
 def generate_random_cross(center_x, center_y, size=15):
@@ -250,6 +328,8 @@ def generate_random_cross(center_x, center_y, size=15):
 
 def test_random_path_finding():
     width, height = 160, 120
+
+    wall_corners = ( (0,0), (0,height), (width,height), (width,0) )
 
     # Generate random center for cross within bounds
     margin = 20
@@ -275,6 +355,8 @@ def test_random_path_finding():
     print(f"Cross center: ({cx}, {cy})")
 
     # Call the main function
-    path_finding(cross, start, vip, objects, end)
+    path_finding(cross, start, vip, objects, end, wall_corners)
 
-test_random_path_finding()
+if __name__ == "__main__":
+    # Run the test function to generate random path finding scenario
+    test_random_path_finding()
