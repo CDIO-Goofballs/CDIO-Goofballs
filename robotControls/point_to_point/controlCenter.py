@@ -7,7 +7,7 @@ from point import Point
 
 
 ev3_ip = '192.168.137.30'
-port = 12346
+port = 12345
 
 positions = [
     Point(0,0),
@@ -51,12 +51,13 @@ def send_commands(commands):
 
 
 keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
-keyboard.add_hotkey('w', send_command, args=((Command.DRIVE, 800),))
-keyboard.add_hotkey('d', send_command, args=((Command.TURN, 90),))
-keyboard.add_hotkey('a', send_command, args=((Command.TURN, -90),))
-keyboard.add_hotkey('s', send_command, args=((Command.DRIVE, -800),))
-keyboard.add_hotkey('t', send_command, args=((Command.SERVO, 1),))
+#keyboard.add_hotkey('w', send_command, args=((Command.DRIVE, 800),))
+#keyboard.add_hotkey('d', send_command, args=((Command.TURN, 90),))
+#keyboard.add_hotkey('a', send_command, args=((Command.TURN, -90),))
+#keyboard.add_hotkey('s', send_command, args=((Command.DRIVE, -800),))
+keyboard.add_hotkey('t', send_command, args=((Command.SERVO, -30),))
 keyboard.add_hotkey('y', send_command, args=((Command.SERVO, 0),))
+keyboard.add_hotkey('u', send_command, args=((Command.SERVO, 80),))
 
 keyboard.wait('q')
 

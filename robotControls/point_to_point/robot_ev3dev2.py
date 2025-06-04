@@ -7,6 +7,7 @@ import socket
 import time
 import threading
 import queue
+import math
 
 queue = queue.Queue()
 
@@ -15,7 +16,7 @@ motorA = LargeMotor(OUTPUT_A)
 motorB = LargeMotor(OUTPUT_B)
 servo = MediumMotor(OUTPUT_D)
 
-servo_on = False # Flag to stop servo from rotating the plate into the exit pipe or ground.
+servo_position = 0 # -30 is closed, 0 is slightly open, 80 is open and letting balls out.
 servo.reset()
 
 tank = MoveTank(OUTPUT_A, OUTPUT_B)
@@ -61,6 +62,7 @@ def stop():
     steering.off()
     move_diff.off()
     stop_event.set()
+    servo.on_to_position(SpeedPercent(20), 0)
     while (not queue.empty()):
         queue.get()
 
@@ -127,20 +129,18 @@ def execute_command():
         if(cmd == "drive"): straight(-float(arg)) # Invert directionen since front is back.
         elif(cmd == "backwards"): straight(float(arg))
         elif(cmd == "turn"): rotate_robot(float(arg))
-        elif(cmd == "servo"): toggle_servo(int(arg))
+        elif(cmd == "servo"): move_servo(int(arg))
         time.sleep(0.1)
 
-def toggle_servo(enable):
-    global servo_on
-    if enable == 1 and not servo_on:
-        servo_on = True
-        servo.on_to_position(SpeedPercent(20), 90)
-    else:
-        if not servo_on:
-            return
-        servo_on = False
-        servo.on_to_position(SpeedPercent(20), -90)
+def move_servo(position):
+    global servo_position
+
+    if position == servo_position:
+        return
+    servo.on_to_position(SpeedPercent(20), position)
+    servo_position = position
     servo.off()
+        
 
 def check_for_commands(conn):
     try:
@@ -173,7 +173,7 @@ def check_for_commands(conn):
         print("Connection closed")
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-    server_socket.bind(('', 12346))
+    server_socket.bind(('', 12345))
     server_socket.listen(1)
 
     print("Waiting for connection...")
