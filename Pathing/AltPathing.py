@@ -237,14 +237,26 @@ def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
         create_wall_polygon(bottom_left, top_left, thickness)    # Left wall
     ]
 
-def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vip, width, height, ball_diameter=4):
+def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vip, width, height, ball_diameter=4, original_obstacles=None):
     fig, ax = plt.subplots(figsize=(10,8))
     radius = ball_diameter / 2
 
-    # Obstacles
-    for obs in obstacles:
-        patch = MplPolygon(list(obs.exterior.coords), closed=True, facecolor='lightgray', edgecolor='black')
-        ax.add_patch(patch)
+    if original_obstacles is None:
+        original_obstacles = obstacles
+
+    # Plot inflated obstacles with original ones inside
+    for inflated_obs, original_obs in zip(obstacles, original_obstacles):
+    # Inflated obstacle (outer)
+        inflated_patch = MplPolygon(list(inflated_obs.exterior.coords), closed=True, 
+                                facecolor='lightgray', edgecolor='gray', alpha=0.6)
+        ax.add_patch(inflated_patch)
+
+    # Original obstacle (inner)
+        original_patch = MplPolygon(list(original_obs.exterior.coords), closed=True, 
+                                facecolor='dimgray', edgecolor='black', alpha=1.0)
+        ax.add_patch(original_patch)
+
+
 
     ax.add_patch(Circle(start, radius, color='green', label='Start'))
     if vip:
@@ -285,7 +297,7 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     plt.show()
 
 
-def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=120):
+def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=120, robot_radius=2):
     if not balls:
         return []
     if cross:
@@ -300,16 +312,18 @@ def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=
     else:
         boundary_walls = []
 
-    # Combine all obstacles
+        # Combine all obstacles
     obstacles = cross_obstacles + boundary_walls
 
-    if not start:
-        start = (200, 200) # TODO remove later
+    # Inflate all obstacles by robot radius
+    inflated_obstacles = [obs.buffer(robot_radius) for obs in obstacles]
 
-    # Plan and plot
-    best_order, best_length, full_path, has_vip = plan_route_free_space(start, vip, balls, end, obstacles)
-    plot_route(start, vip, balls, end, obstacles, full_path, best_order, has_vip, width=width, height=height)
-    return full_path
+    best_order, best_length, full_path, has_vip = plan_route_free_space(
+        start, vip, balls, end, inflated_obstacles
+    )
+
+    plot_route(start, vip, balls, end, inflated_obstacles, full_path, best_order, has_vip, width=width, height=height, original_obstacles=obstacles)
+
 
 def generate_random_cross(center_x, center_y, size=15):
     half = size / 2
@@ -335,7 +349,7 @@ def test_random_path_finding():
     end = (random.uniform(0, width), random.uniform(0, height))
 
     # Random number of objects (0 to 10)
-    num_objects = random.randint(0, 10)
+    num_objects = random.randint(5, 10)
     objects = [(random.uniform(0, width), random.uniform(0, height)) for _ in range(num_objects)]
 
     # Randomly include a VIP (50% chance)
@@ -348,7 +362,7 @@ def test_random_path_finding():
     print(f"Cross center: ({cx}, {cy})")
 
     # Call the main function
-    path_finding(cross, start, vip, objects, end, wall_corners)
+    path_finding(cross, start, vip, objects, end, wall_corners, robot_radius=2)
 
 if __name__ == "__main__":
     # Run the test function to generate random path finding scenario
