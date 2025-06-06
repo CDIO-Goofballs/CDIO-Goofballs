@@ -320,6 +320,10 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     ax.set_ylim(0, height)
     ax.grid(True)
 
+    # Draw the figure non-blocking
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
 def extract_turn_points(path, angle_threshold_degrees=5):
     """
     Returns points in the path where the robot should turn (i.e., direction changes).
@@ -351,9 +355,6 @@ def extract_turn_points(path, angle_threshold_degrees=5):
             turn_points.append(tuple(p2))  # Add the turning point
 
     return turn_points
-    # Draw the figure non-blocking
-    fig.canvas.draw()
-    fig.canvas.flush_events()
 
 def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
     if not balls:
