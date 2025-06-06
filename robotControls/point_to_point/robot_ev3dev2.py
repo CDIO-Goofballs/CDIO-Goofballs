@@ -1,31 +1,26 @@
 #!/usr/bin/env python3
-from ev3dev2.motor import MediumMotor, LargeMotor, OUTPUT_A, OUTPUT_B, OUTPUT_D, MoveSteering, MoveDifferential, MoveTank, SpeedPercent, SpeedDPM, follow_for_ms, FollowGyroAngleErrorTooFast
-from ev3dev2.sensor import INPUT_1, INPUT_2, INPUT_3, INPUT_4
+from ev3dev2.motor import MediumMotor, LargeMotor, OUTPUT_A, OUTPUT_B, OUTPUT_D, MoveTank, SpeedPercent
+from ev3dev2.sensor import INPUT_3
 from ev3dev2.sensor.lego import GyroSensor
-from ev3dev2.wheel import EV3Tire
 import socket
 import time
 import threading
 import queue
-import math
 
 queue = queue.Queue()
 
 # Initialize the motors.
-motorA = LargeMotor(OUTPUT_A)
-motorB = LargeMotor(OUTPUT_B)
+motorA = LargeMotor(OUTPUT_B) # Reverse motors because we drive inverted
+motorB = LargeMotor(OUTPUT_A)
 servo = MediumMotor(OUTPUT_D)
 
 servo_position = 0 # -30 is closed, 0 is slightly open, 80 is open and letting balls out.
 servo.reset()
 
 tank = MoveTank(OUTPUT_A, OUTPUT_B)
-steering = MoveSteering(OUTPUT_A, OUTPUT_B)
-move_diff = MoveDifferential(OUTPUT_A, OUTPUT_B, EV3Tire, 170)
-
 # Initialize the tank's gyro sensor
-tank.gyro = GyroSensor()
-move_diff.gyro = GyroSensor()
+tank.gyro = GyroSensor(INPUT_3)
+tank.gyro.mode = "GYRO-ANG"
 
 shutdown_event = threading.Event()
 stop_event = threading.Event()
@@ -59,32 +54,10 @@ def stop():
     print("Stopped")
     tank.stop()
     tank.off()
-    steering.off()
-    move_diff.off()
     stop_event.set()
     servo.on_to_position(SpeedPercent(20), 0)
     while (not queue.empty()):
         queue.get()
-
-def adjust_to_gyro(target_deg, speed=1):
-    print("Adjust gyro")
-    while abs(tank.gyro.angle - target_deg) > 1 and not stop_event.is_set:  # allow a tiny error range
-        current_angle = tank.gyro.angle
-        print("Gyro Angle: ", current_angle)
-        if current_angle < target_deg:
-            # turn right (clockwise)
-            tank.on(SpeedPercent(speed), SpeedPercent(-speed))
-        else:
-            # turn left (counter-clockwise)
-            tank.on(SpeedPercent(-speed), SpeedPercent(speed))
-        time.sleep(0.01)
-
-def rotate(deg):
-    print("Turning by ", deg)
-    tank.gyro.reset()
-    tank.turn_degrees(speed=SpeedPercent(30), target_angle=deg)
-    #time.sleep(0.5)
-    #adjust_to_gyro(deg)
     
 def rotate_robot(angle, speed=15):
     """
@@ -95,28 +68,29 @@ def rotate_robot(angle, speed=15):
     tank.gyro.reset()
     time.sleep(0.5)
     # Determine direction
+    print("Angle: ", angle)
     if angle > 0:
         # Turn right
+        print("Turning right with angle: ", angle)
         tank.on(speed, -speed)
         while -tank.gyro.angle < angle and not stop_event.is_set():
             time.sleep(0.001)
     else:
         # Turn left
+        print("Turning left with angle: ", angle)
         tank.on(-speed, speed)
         while -tank.gyro.angle > angle and not stop_event.is_set():
             time.sleep(0.001)
     tank.off()
     
 
-def straight(distance, speed = 30):
+def straight(distance, speed = 60):
     rotations = CM_TO_ROTATIONS(abs(distance/10))
     if distance > 0:
         tank.on_for_rotations(speed, speed, rotations)
     else:
         tank.on_for_rotations(-speed, -speed, rotations)
-
-def test():
-    time.sleep(10)
+    print("Driving distanec: ", distance)
 
 def execute_command():
     while not shutdown_event.is_set():
@@ -125,9 +99,7 @@ def execute_command():
         command = queue.get()
         cmd = command[0]
         arg = command[1]
-        print("Got command: ", (cmd, arg))
         if(cmd == "drive"): straight(-float(arg)) # Invert directionen since front is back.
-        elif(cmd == "backwards"): straight(float(arg))
         elif(cmd == "turn"): rotate_robot(float(arg))
         elif(cmd == "servo"): move_servo(int(arg))
         time.sleep(0.1)
@@ -148,11 +120,10 @@ def check_for_commands(conn):
             data = conn.recv(1024)
             if not data:
                 break
-
+            print("Data: " + data.decode())
             commands = data.decode().strip().rstrip(';').split(';') # Remove trailing semicolon to prevent empty string at the end
-            print(commands)
+            print("Commands: ", commands)
             for cmd in commands:
-                print(cmd)
                 cmds = cmd.split(',')
                 cmd_name = cmds[0].strip()
                 if(cmd_name == "stop"): 

@@ -6,24 +6,23 @@ import point
 from point import Point
 import time
 
-"""
-Square
 positions = [
     Point(0,0),
-    Point(200,0),
-    Point(200,200),
-    Point(0,200),
+    Point(1000,0),
+    Point(1000,1000),
+    Point(0,1000),
     Point(0,0)
-] """
-positions = [
+]
+
+"""positions = [
     Point(0,0),
     Point(1000,1000),
     Point(1600,0),
     Point(1600,-1200),
     Point(400,1000),
     Point(0,0)
-]
-robot_start_angle = 0 # 0 is straight up
+]"""
+robot_start_angle = 90 # 0 is towards positive on the x-axis
 
 # Setup server socket
 port = 12345
@@ -51,7 +50,7 @@ def reconnect():
             if(counter > 20):
                 break
             counter += 1
-            time.sleep(1)  # Wait before retrying
+            time.sleep(1)  # Wait before retrying"""
 
 class Command(Enum):
     DRIVE = "drive"
@@ -60,6 +59,7 @@ class Command(Enum):
     SERVO= "servo"
 
 def send_command(command: tuple[Command, Any]):
+    print(command)
     global conn
     name, val = command
     message = ','.join((name.value, str(val))) + ';'
@@ -87,7 +87,7 @@ def send_commands(commands):
 
 
 
-keyboard.add_hotkey('b', send_commands, args=(points_to_commands(robot_start_angle=0, positions=positions),))
+keyboard.add_hotkey('b', send_commands, args=(points_to_commands(robot_start_angle=robot_start_angle, positions=positions),))
 keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
 #keyboard.add_hotkey('w', send_command, args=((Command.DRIVE, 800),))
 #keyboard.add_hotkey('d', send_command, args=((Command.TURN, 90),))
