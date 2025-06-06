@@ -3,6 +3,7 @@ import unittest
 
 import numpy as np
 from shapely.geometry import Point, LineString, Polygon
+from shapely.prepared import prep
 import networkx as nx
 import itertools
 import matplotlib.pyplot as plt
@@ -13,13 +14,14 @@ def is_visible(p1, p2, obstacles):
     """
     Check if the line segment p1->p2 does not intersect any obstacle (except at endpoints).
     p1, p2: tuples (x, y)
-    obstacles: list of shapely Polygons
+    obstacles: list of shapely Polygons or PreparedGeometry
     """
     line = LineString([p1, p2])
     for obs in obstacles:
-        if line.crosses(obs) or line.within(obs):
+        if obs.crosses(line) or obs.contains(line):
             return False
     return True
+
 
 def build_visibility_graph(points, obstacles):
     """
@@ -320,7 +322,7 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     plt.show()
 
 
-def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=120, robot_radius=2):
+def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=120, ball_diameter=4):
     if not balls:
         return []
     if cross:
@@ -335,14 +337,21 @@ def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=
     else:
         boundary_walls = []
 
-        # Combine all obstacles
+    # Combine all obstacles
     obstacles = cross_obstacles + boundary_walls
 
-    # Inflate all obstacles by robot radius
-    inflated_obstacles = [obs.buffer(robot_radius) for obs in obstacles]
+    # Inflate obstacles
+    robot_radius = ball_diameter / 2
+    inflated_obstacles = [obs.buffer(robot_radius).simplify(0.5) for obs in obstacles]
 
+    # Prepare for fast visibility checks
+    from shapely.prepared import prep
+    prepared_obstacles = [prep(obs) for obs in inflated_obstacles]
+
+    # Pass raw inflated to build_visibility_graph (needs .coords),
+    # but prepared obstacles to is_visible (for performance)
     best_order, best_length, full_path, has_vip = plan_route_free_space(
-        start, vip, balls, end, inflated_obstacles
+        start, vip, balls, end, inflated_obstacles  # <- RAW inflated
     )
 
     plot_route(start, vip, balls, end, inflated_obstacles, full_path, best_order, has_vip, width=width, height=height, original_obstacles=obstacles)
