@@ -23,7 +23,6 @@ def is_visible(p1, p2, obstacles):
             return False
     return True
 
-
 def build_visibility_graph(points, obstacles):
     """
     Build visibility graph including:
@@ -279,16 +278,11 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     # Plot inflated obstacles with original ones inside
     for inflated_obs, original_obs in zip(obstacles, original_obstacles):
     # Inflated obstacle (outer)
-        inflated_patch = MplPolygon(list(inflated_obs.exterior.coords), closed=True, 
-                                facecolor='lightgray', edgecolor='gray', alpha=0.6)
+        inflated_patch = MplPolygon(list(inflated_obs.exterior.coords), closed=True, facecolor='lightgray', edgecolor='gray', alpha=0.6)
         ax.add_patch(inflated_patch)
-
     # Original obstacle (inner)
-        original_patch = MplPolygon(list(original_obs.exterior.coords), closed=True, 
-                                facecolor='dimgray', edgecolor='black', alpha=1.0)
+        original_patch = MplPolygon(list(original_obs.exterior.coords), closed=True, facecolor='dimgray', edgecolor='black', alpha=1.0)
         ax.add_patch(original_patch)
-
-
 
     ax.add_patch(Circle(start, radius, color='green', label='Start'))
     if vip:
@@ -306,13 +300,8 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
         ax.plot(xs, ys, 'r-', linewidth=2, label='Planned path')
 
     # Title
-    if has_vip:
-        order_text = "Visit order: Start"
-        offset = 2
-    else:
-        order_text = "Visit order: Start"
-        offset = 1
-
+    order_text = "Visit order: Start"
+    offset = 2 if has_vip else 1
     for idx in best_order:
         if has_vip and idx == 1:
             order_text += " → VIP"
@@ -327,7 +316,6 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     ax.set_ylim(0, height)
     plt.grid(True)
     plt.show()
-
 
 def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
     if not balls:
@@ -344,7 +332,6 @@ def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, wi
     else:
         boundary_walls = []
 
-    # Combine all obstacles
     # Combine all obstacles
     obstacles = cross_obstacles + boundary_walls
 
@@ -401,7 +388,7 @@ class TestPathFinding(unittest.TestCase):
 
             obstacles = []
             obstacles += convert_cross_to_polygons(cross, 3)
-            inflated_obstacles = [obs.buffer(robot_radius) for obs in obstacles]
+            inflated_obstacles = [obs.buffer(robot_radius).simplify(0.5) for obs in obstacles]
             if any(Polygon(obs).contains(Point(start)) or Polygon(obs).contains(Point(end)) for obs in inflated_obstacles):
                 self.assertEqual(len(path), 0, "There should be no path if start or end is inside an obstacle")
             else:
