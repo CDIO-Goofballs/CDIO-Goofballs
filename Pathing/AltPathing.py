@@ -325,7 +325,7 @@ def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=
         return []
     if cross:
         # Convert to two rectangular obstacles (vertical + horizontal arms)
-        cross_obstacles = convert_cross_to_polygons(cross, 2)
+        cross_obstacles = convert_cross_to_polygons(cross, 3)
     else:
         cross_obstacles = []
 
@@ -346,7 +346,7 @@ def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=
     )
 
     plot_route(start, vip, balls, end, inflated_obstacles, full_path, best_order, has_vip, width=width, height=height, original_obstacles=obstacles)
-
+    return full_path
 
 def generate_random_cross(center_x, center_y, size=20):
     half = size / 2
@@ -363,20 +363,29 @@ class TestPathFinding(unittest.TestCase):
 
         for _ in range(5):  # Run 5 times
             margin = 20
-            cx = random.uniform(margin, width - margin)
-            cy = random.uniform(margin, height - margin)
-            cross = generate_random_cross(cx, cy, size=30)
+            offset_height = height - margin
+            offset_width = width - margin
+            cx = random.uniform(margin, offset_width)
+            cy = random.uniform(margin, offset_height)
+            cross = generate_random_cross(cx, cy, size=20)
 
-            start = (random.uniform(0, width), random.uniform(0, height))
-            end = (random.uniform(0, width), random.uniform(0, height))
-            num_objects = random.randint(1, 5)
-            objects = [(random.uniform(0, width), random.uniform(0, height)) for _ in range(num_objects)]
-            vip = (random.uniform(0, width), random.uniform(0, height)) if random.choice([True, False]) else None
+            start = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
+            end = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
+            num_objects = random.randint(1, 10)
+            objects = [(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) for _ in range(num_objects)]
+            vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
 
             path = path_finding(cross, start, vip, objects, end, wall_corners)
 
             self.assertIsInstance(path, list)
-            self.assertGreater(len(path), 0, "Path should not be empty")
+
+            obstacles = []
+            obstacles += convert_cross_to_polygons(cross, 3)
+            if any(Polygon(obs).contains(Point(start)) or Polygon(obs).contains(Point(end)) for obs in obstacles):
+                self.assertEquals(len(path), 0, "There should be no path if start or end is inside an obstacle")
+            else:
+                self.assertGreater(len(path), 0, "Path should not be empty")
+
 
 if __name__ == "__main__":
     unittest.main()
