@@ -33,7 +33,7 @@ WHEEL_DIAMETER_MM = 68  # Adjust based on your wheel
 DEGREES_PER_ROTATION = 360
 PI = 3.1416
 WHEEL_CIRCUMFERENCE_CM = 6.8 * PI   # Approx. for standard EV3 wheels (5.6cm diameter)
-WHEEL_BASE_CM = 16.5
+WHEEL_BASE_CM = 17
 DEGREES_TO_ROTATIONS = lambda angle: (WHEEL_BASE_CM * 3.1416 * angle) / (360 * WHEEL_CIRCUMFERENCE_CM)
 WHEEL_DIAMETER_CM = 6.8  # Standard EV3 wheel diameter
 CM_TO_ROTATIONS = lambda cm: cm / WHEEL_CIRCUMFERENCE_CM
@@ -82,6 +82,7 @@ def rotate_robot(angle, speed=15):
         while -tank.gyro.angle > angle and not stop_event.is_set():
             time.sleep(0.001)
     tank.off()
+    print("gyro angle after turn: ", tank.gyro.angle)
     
 
 def straight(distance, speed = 60):
