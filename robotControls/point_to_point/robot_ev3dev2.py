@@ -68,21 +68,17 @@ def rotate_robot(angle, speed=15):
     tank.gyro.reset()
     time.sleep(0.5)
     # Determine direction
-    print("Angle: ", angle)
     if angle > 0:
         # Turn right
-        print("Turning right with angle: ", angle)
         tank.on(speed, -speed)
         while -tank.gyro.angle < angle and not stop_event.is_set():
             time.sleep(0.001)
     else:
         # Turn left
-        print("Turning left with angle: ", angle)
         tank.on(-speed, speed)
         while -tank.gyro.angle > angle and not stop_event.is_set():
             time.sleep(0.001)
     tank.off()
-    print("gyro angle after turn: ", tank.gyro.angle)
     
 
 def straight(distance, speed = 60):
@@ -91,7 +87,6 @@ def straight(distance, speed = 60):
         tank.on_for_rotations(speed, speed, rotations)
     else:
         tank.on_for_rotations(-speed, -speed, rotations)
-    print("Driving distanec: ", distance)
 
 def execute_command():
     while not shutdown_event.is_set():
@@ -121,9 +116,9 @@ def check_for_commands(conn):
             data = conn.recv(1024)
             if not data:
                 break
-            print("Data: " + data.decode())
+            
             commands = data.decode().strip().rstrip(';').split(';') # Remove trailing semicolon to prevent empty string at the end
-            print("Commands: ", commands)
+            
             for cmd in commands:
                 cmds = cmd.split(',')
                 cmd_name = cmds[0].strip()
