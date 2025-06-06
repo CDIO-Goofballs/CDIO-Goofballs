@@ -129,7 +129,6 @@ def reconstruct_full_path(paths, best_order):
     full_path.extend(paths[best_order[-1]][n-1][1:])
     return full_path
 
-
 def plan_route_free_space(start, vip, others, end, obstacles):
     points = [start]
     vip_idx = None
@@ -143,20 +142,43 @@ def plan_route_free_space(start, vip, others, end, obstacles):
 
     G, all_nodes = build_visibility_graph(points, obstacles)
     points_indices = list(range(len(points)))
+
+    # Check reachability from start (index 0)
+    reachable = set()
+    for i in points_indices:
+        if i == 0 or nx.has_path(G, source=0, target=i):
+            reachable.add(i)
+
+    # Reconstruct the filtered points
+    filtered_points = [points[i] for i in range(len(points)) if i in reachable]
+    new_vip = vip if vip_idx in reachable else None
+    filtered_others = [pt for i, pt in enumerate(others, start=2 if vip is not None else 1) if i in reachable]
+    filtered_end = end if (len(points) - 1) in reachable else None
+
+    if filtered_end is None:
+        # If end is not reachable, no valid path possible
+        return [], 0, [], vip is not None
+
+    new_points = [start]
+    if new_vip:
+        new_points.append(new_vip)
+    new_points += filtered_others
+    new_points.append(filtered_end)
+
+    G, all_nodes = build_visibility_graph(new_points, obstacles)
+    points_indices = list(range(len(new_points)))
     dist, paths = compute_distance_matrix(G, all_nodes, points_indices)
 
-    # Adjust TSP based on whether VIP is present
-    if vip is not None:
+    if new_vip:
         best_order, best_length = solve_vip_tsp_route(dist)
     else:
         best_order, best_length = solve_tsp_no_vip(dist)
 
     if best_order:
         full_path = reconstruct_full_path(paths, best_order)
-        return best_order, best_length, full_path, vip is not None
+        return best_order, best_length, full_path, new_vip is not None
     else:
-        return [], 0, [], vip is not None
-
+        return [], 0, [], new_vip is not None
 
 def convert_cross_to_polygons(cross_points, arm_width=3):
     """
