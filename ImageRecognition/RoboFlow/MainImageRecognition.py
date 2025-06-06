@@ -24,10 +24,11 @@ def initialize_camera():
     frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-def run_image_recognition():
+def run_image_recognition(imageFrame=None):
     global scale_factor, latest_position, latest_angle, balls, vip_ball, wall_corners, egg, cross, small_goal, frame_height, frame_width
 
-    ret, imageFrame = cam.read()
+    if imageFrame is None:
+        ret, imageFrame = cam.read()
 
     imageFrame, scale_factor, latest_position, latest_angle = find_aruco(imageFrame, scale_factor, frame_width,
                                                                       frame_height)
