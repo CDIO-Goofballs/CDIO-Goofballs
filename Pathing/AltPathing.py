@@ -269,8 +269,6 @@ def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
     ]
 
 def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vip, width, height, ball_diameter=4, original_obstacles=None):
-    plt.ion() # Interactive mode
-
     plt.clf()
     fig, ax = plt.gcf(), plt.gca()
     fig.set_size_inches(8, 6, True)
@@ -320,9 +318,7 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     ax.set_ylim(0, height)
     ax.grid(True)
 
-    # Draw the figure non-blocking
-    fig.canvas.draw()
-    fig.canvas.flush_events()
+    plt.show()
 
 def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
     if not balls:
