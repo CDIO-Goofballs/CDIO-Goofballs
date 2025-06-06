@@ -329,7 +329,7 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     plt.show()
 
 
-def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=120, ball_diameter=4):
+def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
     if not balls:
         return []
     if cross:
@@ -352,7 +352,6 @@ def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=
         start = (200, 200) # TODO: Remove after goal position is used
 
     # Inflate obstacles
-    robot_radius = ball_diameter / 2
     inflated_obstacles = [obs.buffer(robot_radius).simplify(0.5) for obs in obstacles]
 
     # Prepare for fast visibility checks
