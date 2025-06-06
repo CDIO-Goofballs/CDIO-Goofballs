@@ -8,9 +8,6 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPolygon, Circle
 import random
 
-from ImageRecognition.RoboFlow.MainImageRecognition import wall_corners
-
-
 def is_visible(p1, p2, obstacles):
     """
     Check if the line segment p1->p2 does not intersect any obstacle (except at endpoints).
@@ -306,12 +303,8 @@ def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=
     # Combine all obstacles
     obstacles = cross_obstacles + boundary_walls
 
-    start = (200, 200) # TODO remove later
-
-    print("Start:", start)
-    print("VIP:", vip)
-    print("Objects:", balls)
-    print("End:", end)
+    if not start:
+        start = (200, 200) # TODO remove later
 
     # Plan and plot
     best_order, best_length, full_path, has_vip = plan_route_free_space(start, vip, balls, end, obstacles)
