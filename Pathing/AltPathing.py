@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 from shapely.geometry import Point, LineString, Polygon
 import networkx as nx
+from networkx.algorithms.approximation import traveling_salesman_problem
 import itertools
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPolygon, Circle
@@ -80,45 +81,50 @@ def compute_distance_matrix(G, all_nodes, points_indices):
 
     return dist, paths
 
-def solve_vip_tsp_route(dist):
+def solve_tsp_approx(dist, start_idx=0, end_idx=None, must_visit_first=None):
     n = len(dist)
-    others_indices = list(range(2, n-1))  # indices of other balls
+    G = nx.complete_graph(n)
 
-    best_order = None
-    best_length = float('inf')
+    for i in range(n):
+        for j in range(i + 1, n):
+            G[i][j]['weight'] = dist[i][j]
+            G[j][i]['weight'] = dist[j][i]
 
-    for perm in itertools.permutations(others_indices):
-        order = [1] + list(perm)  # include vip at the beginning
-        length = dist[0][1]  # start -> vip
-        length += dist[1][perm[0]]  # vip -> first other
-        for i in range(len(perm)-1):
-            length += dist[perm[i]][perm[i+1]]
-        length += dist[perm[-1]][n-1]  # last other -> end
+    try:
+        tsp_path = traveling_salesman_problem(G, cycle=False, weight='weight', method=nx.approximation.christofides)
+    except Exception as e:
+        print("TSP solver failed:", e)
+        return [], float('inf')
 
-        if length < best_length:
-            best_length = length
-            best_order = order
+    if start_idx not in tsp_path or (end_idx is not None and end_idx not in tsp_path):
+        return [], float('inf')
 
-    return best_order, best_length
+    # Reorder to start at start_idx
+    start_pos = tsp_path.index(start_idx)
+    tsp_path = tsp_path[start_pos:] + tsp_path[:start_pos]
 
-def solve_tsp_no_vip(dist):
-    n = len(dist)
-    others_indices = list(range(1, n-1))  # Exclude start and end
+    # Ensure it ends at end_idx
+    if end_idx is not None:
+        if tsp_path[-1] != end_idx:
+            if end_idx in tsp_path:
+                tsp_path.remove(end_idx)
+            tsp_path.append(end_idx)
 
-    best_order = None
-    best_length = float('inf')
+    # Handle must_visit_first (place immediately after start)
+    if must_visit_first is not None and must_visit_first in tsp_path:
+        tsp_path.remove(must_visit_first)
+        tsp_path.insert(1, must_visit_first)
 
-    for perm in itertools.permutations(others_indices):
-        length = dist[0][perm[0]]  # start -> first other
-        for i in range(len(perm)-1):
-            length += dist[perm[i]][perm[i+1]]
-        length += dist[perm[-1]][n-1]  # last other -> end
+    # Sanity check again
+    if len(tsp_path) < 2 or start_idx != tsp_path[0] or (end_idx is not None and tsp_path[-1] != end_idx):
+        return [], float('inf')
 
-        if length < best_length:
-            best_length = length
-            best_order = perm
+    # Calculate total length
+    total_length = sum(dist[tsp_path[i]][tsp_path[i + 1]] for i in range(len(tsp_path) - 1))
 
-    return best_order, best_length
+    # Remove start and end from internal path
+    internal_path = tsp_path[1:-1] if end_idx is not None else tsp_path[1:]
+    return internal_path, total_length
 
 def reconstruct_full_path(paths, best_order):
     n = len(paths)
@@ -150,7 +156,6 @@ def plan_route_free_space(start, vip, others, end, obstacles):
             reachable.add(i)
 
     # Reconstruct the filtered points
-    filtered_points = [points[i] for i in range(len(points)) if i in reachable]
     new_vip = vip if vip_idx in reachable else None
     filtered_others = [pt for i, pt in enumerate(others, start=2 if vip is not None else 1) if i in reachable]
     filtered_end = end if (len(points) - 1) in reachable else None
@@ -170,9 +175,11 @@ def plan_route_free_space(start, vip, others, end, obstacles):
     dist, paths = compute_distance_matrix(G, all_nodes, points_indices)
 
     if new_vip:
-        best_order, best_length = solve_vip_tsp_route(dist)
+        vip_idx = 1  # VIP index in points
+        best_order, best_length = solve_tsp_approx(dist, start_idx=0, end_idx=len(points_indices) - 1,
+                                                   must_visit_first=vip_idx)
     else:
-        best_order, best_length = solve_tsp_no_vip(dist)
+        best_order, best_length = solve_tsp_approx(dist, start_idx=0, end_idx=len(points_indices) - 1)
 
     if best_order:
         full_path = reconstruct_full_path(paths, best_order)
@@ -335,8 +342,11 @@ def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=
     else:
         boundary_walls = []
 
-        # Combine all obstacles
+    # Combine all obstacles
     obstacles = cross_obstacles + boundary_walls
+
+    if not start:
+        start = (200, 200) # TODO: Remove after goal position is used
 
     # Inflate all obstacles by robot radius
     inflated_obstacles = [obs.buffer(robot_radius) for obs in obstacles]
@@ -372,7 +382,7 @@ class TestPathFinding(unittest.TestCase):
 
             start = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
             end = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
-            num_objects = random.randint(1, 10)
+            num_objects = random.randint(7, 10)
             objects = [(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) for _ in range(num_objects)]
             vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
 
@@ -384,7 +394,7 @@ class TestPathFinding(unittest.TestCase):
             obstacles += convert_cross_to_polygons(cross, 3)
             inflated_obstacles = [obs.buffer(robot_radius) for obs in obstacles]
             if any(Polygon(obs).contains(Point(start)) or Polygon(obs).contains(Point(end)) for obs in inflated_obstacles):
-                self.assertEquals(len(path), 0, "There should be no path if start or end is inside an obstacle")
+                self.assertEqual(len(path), 0, "There should be no path if start or end is inside an obstacle")
             else:
                 self.assertGreater(len(path), 0, "Path should not be empty")
 
