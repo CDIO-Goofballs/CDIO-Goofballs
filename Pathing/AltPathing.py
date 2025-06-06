@@ -328,6 +328,37 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     plt.grid(True)
     plt.show()
 
+def extract_turn_points(path, angle_threshold_degrees=5):
+    """
+    Returns points in the path where the robot should turn (i.e., direction changes).
+    Ignores small deviations below `angle_threshold_degrees`.
+    """
+    if len(path) < 3:
+        return []  # Not enough points to form a turn
+
+    turn_points = []
+    threshold_rad = math.radians(angle_threshold_degrees)
+
+    for i in range(1, len(path) - 1):
+        p1 = np.array(path[i - 1])
+        p2 = np.array(path[i])
+        p3 = np.array(path[i + 1])
+
+        v1 = p2 - p1
+        v2 = p3 - p2
+
+        if np.linalg.norm(v1) == 0 or np.linalg.norm(v2) == 0:
+            continue  # Ignore degenerate segments
+
+        # Normalize vectors
+        v1 = v1 / np.linalg.norm(v1)
+        v2 = v2 / np.linalg.norm(v2)
+
+        angle = math.acos(np.clip(np.dot(v1, v2), -1.0, 1.0))
+        if angle > threshold_rad:
+            turn_points.append(tuple(p2))  # Add the turning point
+
+    return turn_points
 
 def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
     if not balls:
@@ -365,7 +396,9 @@ def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, wi
     )
 
     plot_route(start, vip, balls, end, inflated_obstacles, full_path, best_order, has_vip, width=width, height=height, original_obstacles=obstacles)
-    return full_path
+    turn_points = extract_turn_points(full_path)
+    return full_path, turn_points
+
 
 def generate_random_cross(center_x, center_y, size=20):
     half = size / 2
@@ -395,9 +428,10 @@ class TestPathFinding(unittest.TestCase):
             objects = [(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) for _ in range(num_objects)]
             vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
 
-            path = path_finding(cross, start, vip, objects, end, wall_corners, robot_radius=robot_radius, width=width, height=height)
+            path, turn_points = path_finding(cross, start, vip, objects, end, wall_corners, robot_radius=robot_radius, width=width, height=height)
 
             self.assertIsInstance(path, list)
+            self.assertIsInstance(turn_points, list)
 
             obstacles = []
             obstacles += convert_cross_to_polygons(cross, 3)
