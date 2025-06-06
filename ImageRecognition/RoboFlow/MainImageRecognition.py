@@ -2,7 +2,7 @@ import time
 
 import cv2
 from ImageRecognition.RoboFlow.RoboFlow import object_recognition
-from ImageRecognition.RoboFlow.CoordinateMapping import find_qr
+from ImageRecognition.RoboFlow.CoordinateMapping import find_aruco
 
 scale_factor = 1
 latest_position = None
@@ -18,7 +18,7 @@ frame_height = 480  # Default height, can be adjusted
 
 def initialize_camera():
     global cam, frame_width, frame_height
-    cam = cv2.VideoCapture(1)
+    cam = cv2.VideoCapture(0)
 
     # Get the default frame width and height
     frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -29,18 +29,20 @@ def run_image_recognition():
 
     ret, imageFrame = cam.read()
 
-    imageFrame, scale_factor, latest_position, latest_angle = find_qr(imageFrame, scale_factor, frame_width,
+    imageFrame, scale_factor, latest_position, latest_angle = find_aruco(imageFrame, scale_factor, frame_width,
                                                                       frame_height)
     imageFrame, balls, vip_ball, wall_corners, cross, egg, small_goal = object_recognition(imageFrame, scale_factor)
 
     # Display the captured frame
-    #cv2.imshow("ImageRecognition", imageFrame)
+    cv2.imshow("ImageRecognition", imageFrame)
+    cv2.waitKey(1)
+
 
 
 def stop_image_recognition():
     # Release the capture and writer objects
     cam.release()
-    #cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
 
 # Function to get the latest angle, position, and other recognized objects
 def get_angle():
