@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import math
-import cv2.aruco as aruco
 
 # Camera parameters (same as before)
 focal_length = 800
@@ -66,11 +65,11 @@ def find_aruco(image, scale_factor, width, height):
                 print(f"Direction: {angle_deg:.1f} degrees")
 
                 # Draw axis
-                cv2.drawFrameAxes(image, camera_matrix, dist_coeffs, rvec, tvec, 0.1)
+                cv2.drawFrameAxes(image, camera_matrix, dist_coeffs, rvec, tvec, 0.2)
 
                 break  # Stop after finding ID 1
             else:
                 pts = corners[i][0].astype(np.float32)
-                cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 1)
+                cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
 
     return image, scale_factor, position, angle_deg
