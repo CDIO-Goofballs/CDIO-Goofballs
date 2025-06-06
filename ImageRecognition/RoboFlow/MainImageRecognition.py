@@ -16,36 +16,31 @@ small_goal = None
 frame_width = 640  # Default width, can be adjusted
 frame_height = 480  # Default height, can be adjusted
 
-def start_image_recognition():
-    global scale_factor, latest_position, latest_angle, balls, vip_ball, wall_corners, egg, cross, small_goal, frame_height, frame_width
+def initialize_camera():
+    global cam, frame_width, frame_height
     cam = cv2.VideoCapture(1)
 
     # Get the default frame width and height
     frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    while True:
-        ret, imageFrame = cam.read()
+def run_image_recognition():
+    global scale_factor, latest_position, latest_angle, balls, vip_ball, wall_corners, egg, cross, small_goal, frame_height, frame_width
 
-        print('--------------Start------------------')
+    ret, imageFrame = cam.read()
 
-        imageFrame, scale_factor, latest_position, latest_angle = find_qr(imageFrame, scale_factor, frame_width,
-                                                                          frame_height)
-        imageFrame, balls, vip_ball, wall_corners, cross, egg, small_goal = object_recognition(imageFrame, scale_factor)
+    imageFrame, scale_factor, latest_position, latest_angle = find_qr(imageFrame, scale_factor, frame_width,
+                                                                      frame_height)
+    imageFrame, balls, vip_ball, wall_corners, cross, egg, small_goal = object_recognition(imageFrame, scale_factor)
 
-        print('--------------End--------------------\n')
+    # Display the captured frame
+    #cv2.imshow("ImageRecognition", imageFrame)
 
-        # Display the captured frame
-        cv2.imshow("ImageRecognition", imageFrame)
 
-        # Press 'q' to exit the loop
-        if cv2.waitKey(1) == ord('q'):
-            break
-
+def stop_image_recognition():
     # Release the capture and writer objects
     cam.release()
-    cv2.destroyAllWindows()
-
+    #cv2.destroyAllWindows()
 
 # Function to get the latest angle, position, and other recognized objects
 def get_angle():
