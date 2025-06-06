@@ -1,4 +1,5 @@
 import math
+import unittest
 
 import numpy as np
 from shapely.geometry import Point, LineString, Polygon
@@ -128,7 +129,6 @@ def reconstruct_full_path(paths, best_order):
     full_path.extend(paths[best_order[-1]][n-1][1:])
     return full_path
 
-
 def plan_route_free_space(start, vip, others, end, obstacles):
     points = [start]
     vip_idx = None
@@ -142,22 +142,45 @@ def plan_route_free_space(start, vip, others, end, obstacles):
 
     G, all_nodes = build_visibility_graph(points, obstacles)
     points_indices = list(range(len(points)))
+
+    # Check reachability from start (index 0)
+    reachable = set()
+    for i in points_indices:
+        if i == 0 or nx.has_path(G, source=0, target=i):
+            reachable.add(i)
+
+    # Reconstruct the filtered points
+    filtered_points = [points[i] for i in range(len(points)) if i in reachable]
+    new_vip = vip if vip_idx in reachable else None
+    filtered_others = [pt for i, pt in enumerate(others, start=2 if vip is not None else 1) if i in reachable]
+    filtered_end = end if (len(points) - 1) in reachable else None
+
+    if filtered_end is None:
+        # If end is not reachable, no valid path possible
+        return [], 0, [], vip is not None
+
+    new_points = [start]
+    if new_vip:
+        new_points.append(new_vip)
+    new_points += filtered_others
+    new_points.append(filtered_end)
+
+    G, all_nodes = build_visibility_graph(new_points, obstacles)
+    points_indices = list(range(len(new_points)))
     dist, paths = compute_distance_matrix(G, all_nodes, points_indices)
 
-    # Adjust TSP based on whether VIP is present
-    if vip is not None:
+    if new_vip:
         best_order, best_length = solve_vip_tsp_route(dist)
     else:
         best_order, best_length = solve_tsp_no_vip(dist)
 
     if best_order:
         full_path = reconstruct_full_path(paths, best_order)
-        return best_order, best_length, full_path, vip is not None
+        return best_order, best_length, full_path, new_vip is not None
     else:
-        return [], 0, [], vip is not None
+        return [], 0, [], new_vip is not None
 
-
-def convert_cross_to_polygons(cross_points, arm_width=4):
+def convert_cross_to_polygons(cross_points, arm_width=3):
     """
     Convert a cross defined by 4 points (top, bottom, right, left)
     into two rectangular polygons (vertical and horizontal arms),
@@ -325,7 +348,7 @@ def path_finding(cross, start, vip, balls, end, wall_corners, width=160, height=
     plot_route(start, vip, balls, end, inflated_obstacles, full_path, best_order, has_vip, width=width, height=height, original_obstacles=obstacles)
 
 
-def generate_random_cross(center_x, center_y, size=15):
+def generate_random_cross(center_x, center_y, size=20):
     half = size / 2
     top = (center_x, center_y + half)
     bottom = (center_x, center_y - half)
@@ -333,37 +356,27 @@ def generate_random_cross(center_x, center_y, size=15):
     left = (center_x - half, center_y)
     return (top, bottom, right, left)
 
-def test_random_path_finding():
-    width, height = 160, 120
+class TestPathFinding(unittest.TestCase):
+    def test_random_path_finding_multiple_runs(self):
+        width, height = 160, 120
+        wall_corners = ((0, 0), (0, height), (width, height), (width, 0))
 
-    wall_corners = ( (0,0), (0,height), (width,height), (width,0) )
+        for _ in range(5):  # Run 5 times
+            margin = 20
+            cx = random.uniform(margin, width - margin)
+            cy = random.uniform(margin, height - margin)
+            cross = generate_random_cross(cx, cy, size=30)
 
-    # Generate random center for cross within bounds
-    margin = 20
-    cx = random.uniform(margin, width - margin)
-    cy = random.uniform(margin, height - margin)
-    cross = generate_random_cross(cx, cy, size=30)
+            start = (random.uniform(0, width), random.uniform(0, height))
+            end = (random.uniform(0, width), random.uniform(0, height))
+            num_objects = random.randint(1, 5)
+            objects = [(random.uniform(0, width), random.uniform(0, height)) for _ in range(num_objects)]
+            vip = (random.uniform(0, width), random.uniform(0, height)) if random.choice([True, False]) else None
 
-    # Random start and end points
-    start = (random.uniform(0, width), random.uniform(0, height))
-    end = (random.uniform(0, width), random.uniform(0, height))
+            path = path_finding(cross, start, vip, objects, end, wall_corners)
 
-    # Random number of objects (0 to 10)
-    num_objects = random.randint(5, 10)
-    objects = [(random.uniform(0, width), random.uniform(0, height)) for _ in range(num_objects)]
-
-    # Randomly include a VIP (50% chance)
-    vip = (random.uniform(0, width), random.uniform(0, height)) if random.choice([True, False]) else None
-
-    print(f"Start: {start}")
-    print(f"VIP: {vip}")
-    print(f"Objects: {objects}")
-    print(f"End: {end}")
-    print(f"Cross center: ({cx}, {cy})")
-
-    # Call the main function
-    path_finding(cross, start, vip, objects, end, wall_corners, robot_radius=2)
+            self.assertIsInstance(path, list)
+            self.assertGreater(len(path), 0, "Path should not be empty")
 
 if __name__ == "__main__":
-    # Run the test function to generate random path finding scenario
-    test_random_path_finding()
+    unittest.main()
