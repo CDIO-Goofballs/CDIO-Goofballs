@@ -34,6 +34,7 @@ while True:
     print("--------------Start------------------")
     start_time = time.time()
     run_image_recognition()
+    print ("Time taken for image recognition:", time.time() - start_time)
     pathing()
     print ("Time taken for image recognition and pathing:", time.time() - start_time)
     print("--------------End--------------------")
