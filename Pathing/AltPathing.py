@@ -368,6 +368,7 @@ class TestPathFinding(unittest.TestCase):
             cx = random.uniform(margin, offset_width)
             cy = random.uniform(margin, offset_height)
             cross = generate_random_cross(cx, cy, size=20)
+            robot_radius = 2
 
             start = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
             end = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
@@ -375,13 +376,14 @@ class TestPathFinding(unittest.TestCase):
             objects = [(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) for _ in range(num_objects)]
             vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
 
-            path = path_finding(cross, start, vip, objects, end, wall_corners)
+            path = path_finding(cross, start, vip, objects, end, wall_corners, robot_radius=robot_radius, width=width, height=height)
 
             self.assertIsInstance(path, list)
 
             obstacles = []
             obstacles += convert_cross_to_polygons(cross, 3)
-            if any(Polygon(obs).contains(Point(start)) or Polygon(obs).contains(Point(end)) for obs in obstacles):
+            inflated_obstacles = [obs.buffer(robot_radius) for obs in obstacles]
+            if any(Polygon(obs).contains(Point(start)) or Polygon(obs).contains(Point(end)) for obs in inflated_obstacles):
                 self.assertEquals(len(path), 0, "There should be no path if start or end is inside an obstacle")
             else:
                 self.assertGreater(len(path), 0, "Path should not be empty")
