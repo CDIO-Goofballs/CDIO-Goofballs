@@ -13,6 +13,7 @@ wall_corners = None
 egg = None
 cross = None
 small_goal = None
+
 frame_width = 640  # Default width, can be adjusted
 frame_height = 480  # Default height, can be adjusted
 
@@ -24,10 +25,11 @@ def initialize_camera():
     frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-def run_image_recognition():
+def run_image_recognition(imageFrame=None):
     global scale_factor, latest_position, latest_angle, balls, vip_ball, wall_corners, egg, cross, small_goal, frame_height, frame_width
 
-    ret, imageFrame = cam.read()
+    if imageFrame is None:
+        ret, imageFrame = cam.read()
 
     imageFrame, scale_factor, latest_position, latest_angle = find_aruco(imageFrame, scale_factor, frame_width,
                                                                       frame_height)
@@ -37,11 +39,12 @@ def run_image_recognition():
     cv2.imshow("ImageRecognition", imageFrame)
     cv2.waitKey(1)
 
-
-
 def stop_image_recognition():
     # Release the capture and writer objects
-    cam.release()
+    try:
+        cam.release()
+    except NameError as e:
+        pass
     cv2.destroyAllWindows()
 
 # Function to get the latest angle, position, and other recognized objects

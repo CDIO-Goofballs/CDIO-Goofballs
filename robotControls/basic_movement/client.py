@@ -1,7 +1,7 @@
 import socket
 import keyboard
 
-ev3_ip = '192.168.137.114'  # Replace with EV3's IP
+ev3_ip = '192.168.0.138'  # Replace with EV3's IP
 port = 12346
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,6 +21,7 @@ keyboard.add_hotkey('q', send_command, args=('exit',))     # Quit
 keyboard.add_hotkey('j', send_command, args=('speedup',)) # Speed up
 keyboard.add_hotkey('k', send_command, args=('speeddown',)) # Speed down
 keyboard.add_hotkey('u', send_command, args=('calibrateGyro',)) # Calibrate the gyro sensor
+keyboard.add_hotkey('1', send_command, args=('toggle_servo',)) # Calibrate the gyro sensor
 
 # Wait for hotkeys to be pressed
 keyboard.wait('q')  # Keep waiting until 'q' is pressed to exit
