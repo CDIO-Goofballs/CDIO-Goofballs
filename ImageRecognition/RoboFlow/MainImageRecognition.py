@@ -13,6 +13,7 @@ wall_corners = None
 egg = None
 cross = None
 small_goal = None
+
 frame_width = 640  # Default width, can be adjusted
 frame_height = 480  # Default height, can be adjusted
 
@@ -38,11 +39,12 @@ def run_image_recognition(imageFrame=None):
     cv2.imshow("ImageRecognition", imageFrame)
     cv2.waitKey(1)
 
-
-
 def stop_image_recognition():
     # Release the capture and writer objects
-    cam.release()
+    try:
+        cam.release()
+    except NameError as e:
+        pass
     cv2.destroyAllWindows()
 
 # Function to get the latest angle, position, and other recognized objects

@@ -1,6 +1,8 @@
 import time
 import traceback
 
+import cv2
+
 from ImageRecognition.RoboFlow.MainImageRecognition import (
     initialize_camera, run_image_recognition, stop_image_recognition, get_wall_corners, get_vip_ball, get_balls, get_cross, get_egg,
     get_small_goal, get_angle, get_position, get_scale_factor, get_size)
@@ -37,3 +39,7 @@ while True:
     pathing()
     print ("Time taken for image recognition and pathing:", time.time() - start_time)
     print("--------------End--------------------")
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+stop_image_recognition()
