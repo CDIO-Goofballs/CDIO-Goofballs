@@ -173,12 +173,12 @@ def check_for_commands(conn):
         print("Connection closed")
 
 # Server info
-server_ip = '127.0.0.1'
+server_ip = '192.168.137.1'
 server_port = 12345
 
 while not shutdown_event.is_set():
     try:
-        print(f"Attempting to connect to {server_ip}:{server_port}...")
+        print("Attempting to connect to: ",  server_ip, server_port)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
             client_socket.connect((server_ip, server_port))
             print("Connected to server.")

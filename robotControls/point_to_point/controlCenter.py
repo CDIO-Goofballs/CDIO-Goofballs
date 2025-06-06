@@ -17,20 +17,19 @@ positions = [
 ] """
 positions = [
     Point(0,0),
-    Point(100,100),
-    Point(160,0),
-    Point(160,-120),
-    Point(40,100),
+    Point(1000,1000),
+    Point(1600,0),
+    Point(1600,-1200),
+    Point(400,1000),
     Point(0,0)
 ]
 robot_start_angle = 0 # 0 is straight up
 
 # Setup server socket
-ev3_ip = '192.168.137.30'
 port = 12345
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server_socket.bind((ev3_ip, 12345))
+server_socket.bind(('', port))
 server_socket.listen(1)
 
 print("Waiting for a client to connect...")
@@ -86,9 +85,9 @@ def send_commands(commands):
     for command in commands:
         send_command(command)
 
-send_commands(points_to_commands(robot_start_angle=0, positions=positions))
 
 
+keyboard.add_hotkey('b', send_commands, args=(points_to_commands(robot_start_angle=0, positions=positions),))
 keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
 #keyboard.add_hotkey('w', send_command, args=((Command.DRIVE, 800),))
 #keyboard.add_hotkey('d', send_command, args=((Command.TURN, 90),))
