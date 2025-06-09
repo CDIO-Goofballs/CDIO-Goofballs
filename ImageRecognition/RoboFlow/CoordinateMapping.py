@@ -2,10 +2,10 @@ import cv2
 import numpy as np
 import math
 
-camera_height = 1.70  # meters
+camera_height = 1.68  # meters
 scale_aruco_size = 0.15  # meters
 robot_aruco_size = 0.08  # meters
-robot_aruco_height = 0.4
+robot_aruco_height = 0.2
 
 def find_aruco(image, scale_factor, width, height):
 
@@ -45,8 +45,8 @@ def find_aruco(image, scale_factor, width, height):
                 cy = height / 2
 
                 # Projected ground position in image pixels
-                projected_x = cx + (center_x - cx) * (camera_height / relative_height)
-                projected_y = cy + (center_y - cy) * (camera_height / relative_height)
+                projected_x = cx + (center_x - cx) * (relative_height / camera_height)
+                projected_y = cy + (center_y - cy) * (relative_height / camera_height)
 
                 # Convert to real-world units
                 real_x = projected_x * scale_factor
@@ -59,6 +59,8 @@ def find_aruco(image, scale_factor, width, height):
                 dy = pts[1][1] - pts[0][1]
                 angle_rad = math.atan2(dy, dx)
                 angle_deg = (math.degrees(angle_rad) + 360) % 360
+                print(angle_deg)
+
             elif marker_id == 0: # Scale id should be 0
                 pts = corners[i][0].astype(np.float32)
                 cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
