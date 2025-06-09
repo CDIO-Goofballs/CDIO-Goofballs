@@ -23,7 +23,10 @@ def pathing():
         if end:
             end = (end[0] + (width / 2 - end[0]) / 5, end[1])
 
-        path = path_finding(cross=cross, egg = egg, start=start, vip=vip, balls=balls, end=end, wall_corners=wall_corners, width=width, height=height)
+        path = path_finding(
+            cross=cross,egg = egg, start=start, vip=vip, balls=balls, end=end,
+            wall_corners=wall_corners, width=width, height=height)
+
         if path is not None:
             print("Path found:", path)
         else:
