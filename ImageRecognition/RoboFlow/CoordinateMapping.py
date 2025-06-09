@@ -2,18 +2,6 @@ import cv2
 import numpy as np
 import math
 
-# Camera parameters (same as before)
-focal_length = 800
-cx, cy = 320, 240
-
-camera_matrix = np.array([
-    [focal_length, 0, cx],
-    [0, focal_length, cy],
-    [0, 0, 1]
-], dtype=np.float32)
-
-dist_coeffs = np.zeros((4, 1), dtype=np.float32)
-
 camera_height = 1.70  # meters
 scale_aruco_size = 0.15  # meters
 robot_aruco_size = 0.08  # meters
@@ -44,21 +32,33 @@ def find_aruco(image, scale_factor, width, height):
             if marker_id == 1:  # Robot marker
                 pts = corners[i][0].astype(np.float32)
                 cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
+
+                # Original 2D image center of the marker
                 center_x = np.mean(pts[:, 0])
                 center_y = np.mean(pts[:, 1])
 
-                # Scale factor is from earlier detected scale marker
-                # position in real world (in meters or cm)
-                real_x = center_x * scale_factor
-                real_y = center_y * scale_factor
+                # Project marker to ground position
+                relative_height = camera_height - robot_aruco_height
+
+                # Assumed camera center in image
+                cx = width / 2
+                cy = height / 2
+
+                # Projected ground position in image pixels
+                projected_x = cx + (center_x - cx) * (camera_height / relative_height)
+                projected_y = cy + (center_y - cy) * (camera_height / relative_height)
+
+                # Convert to real-world units
+                real_x = projected_x * scale_factor
+                real_y = projected_y * scale_factor
+
+                position = (real_x, real_y)
 
                 # Estimate angle
                 dx = pts[1][0] - pts[0][0]
                 dy = pts[1][1] - pts[0][1]
                 angle_rad = math.atan2(dy, dx)
                 angle_deg = (math.degrees(angle_rad) + 360) % 360
-
-                position = (real_x, real_y)
             elif marker_id == 0: # Scale id should be 0
                 pts = corners[i][0].astype(np.float32)
                 cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
