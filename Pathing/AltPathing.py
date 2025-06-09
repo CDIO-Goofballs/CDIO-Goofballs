@@ -3,13 +3,12 @@ import unittest
 
 import numpy as np
 from shapely.geometry import Point, LineString, Polygon
-from shapely.prepared import prep
 import networkx as nx
 from networkx.algorithms.approximation import traveling_salesman_problem
-import itertools
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPolygon, Circle
 import random
+from shapely.geometry import Point
 
 def is_visible(p1, p2, obstacles):
     """
@@ -130,10 +129,36 @@ def solve_tsp_approx(dist, start_idx=0, end_idx=None, must_visit_first=None):
 def reconstruct_full_path(paths, best_order):
     n = len(paths)
     full_path = []
-    full_path.extend(paths[0][best_order[0]])
+
+    # Start to first ball
+    subpath = paths[0][best_order[0]]
+    for i, point in enumerate(subpath):
+        if i == 0:
+            label = 'start'
+        elif i == len(subpath) - 1:
+            label = 'vip' if best_order[0] == 1 else 'ball'
+        else:
+            label = 'turn_point'
+        full_path.append((*point, label))
+
+    # Intermediate balls
     for i in range(len(best_order) - 1):
-        full_path.extend(paths[best_order[i]][best_order[i+1]][1:])
-    full_path.extend(paths[best_order[-1]][n-1][1:])
+        subpath = paths[best_order[i]][best_order[i + 1]]
+        for j, point in enumerate(subpath[1:]):
+            if j == len(subpath) - 2:
+                label = 'ball'
+            else:
+                label = 'turn_point'
+            full_path.append((*point, label))
+
+    # Last ball to end
+    subpath = paths[best_order[-1]][n - 1]
+    for k, point in enumerate(subpath[1:]):
+        if k == len(subpath) - 2:
+            label = 'end'
+        else:
+            label = 'turn_point'
+        full_path.append((*point, label))
     return full_path
 
 def plan_route_free_space(start, vip, others, end, obstacles):
@@ -255,6 +280,9 @@ def create_wall_polygon(p1, p2, thickness=1.5):
         (p1[0] - offset_x, p1[1] - offset_y)
     ])
 
+def create_egg(egg, radius=4.5):
+    return [Point(egg).buffer(radius)]
+
 def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
     """
     Given 4 corners: (top_left, bottom_left, bottom_right, top_right),
@@ -271,6 +299,9 @@ def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
 def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vip, width, height, ball_diameter=4, original_obstacles=None):
     plt.clf()
     fig, ax = plt.gcf(), plt.gca()
+
+    #fig, ax = plt.subplots()
+
     fig.set_size_inches(8, 6, True)
     radius = ball_diameter / 2
 
@@ -292,14 +323,17 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
 
     for i, pt in enumerate(others):
         ax.add_patch(Circle(pt, radius, color='blue', label='Other Balls' if i == 0 else None))
-        ax.text(pt[0]+radius, pt[1]+radius, f'O{i}', color='blue')
+        #ax.text(pt[0]+radius, pt[1]+radius, f'O{i}', color='blue')
 
     ax.add_patch(Circle(end, radius, color='red', label='End'))
 
     # Path
     if full_path:
-        xs, ys = zip(*full_path)
+        xs, ys, types = zip(*full_path)
         ax.plot(xs, ys, 'r-', linewidth=2, label='Planned path')
+        # Print point type
+        for i, (x, y, t) in enumerate(full_path):
+            ax.text(x + radius, y + radius, f'{t.capitalize()}', color='black', fontsize=8)
 
     # Title
     order_text = "Visit order: Start"
@@ -320,33 +354,26 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
 
     plt.show()
 
-def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
+    #plt.show()
+
+def path_finding(
+        cross, egg, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
+
     if not balls:
         return []
-    if cross:
-        # Convert to two rectangular obstacles (vertical + horizontal arms)
-        cross_obstacles = convert_cross_to_polygons(cross, 3)
-    else:
-        cross_obstacles = []
 
-    if wall_corners:
-        # Build 4 boundary walls using wall_corners
-        boundary_walls = create_boundary_walls_from_corners(wall_corners, thickness=1.5)
-    else:
-        boundary_walls = []
+    cross_obstacles = convert_cross_to_polygons(cross, 3) if cross else []
+    boundary_walls = create_boundary_walls_from_corners(wall_corners, thickness=1.5) if wall_corners else []
+    egg_obstacle = create_egg(egg) if egg else []
 
     # Combine all obstacles
-    obstacles = cross_obstacles + boundary_walls
+    obstacles = cross_obstacles + boundary_walls + egg_obstacle
 
     if not start:
-        start = (200, 200) # TODO: Remove after goal position is used
+        start = (100, 100) # TODO: Remove after goal position is used
 
     # Inflate obstacles
     inflated_obstacles = [obs.buffer(robot_radius).simplify(0.5) for obs in obstacles]
-
-    # Prepare for fast visibility checks
-    from shapely.prepared import prep
-    prepared_obstacles = [prep(obs) for obs in inflated_obstacles]
 
     # Pass raw inflated to build_visibility_graph (needs .coords),
     # but prepared obstacles to is_visible (for performance)
@@ -370,7 +397,7 @@ class TestPathFinding(unittest.TestCase):
         width, height = 160, 120
         wall_corners = ((0, 0), (0, height), (width, height), (width, 0))
 
-        for _ in range(5):  # Run 5 times
+        for i in range(5):  # Run 5 times
             margin = 20
             offset_height = height - margin
             offset_width = width - margin
@@ -384,8 +411,9 @@ class TestPathFinding(unittest.TestCase):
             num_objects = random.randint(7, 10)
             objects = [(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) for _ in range(num_objects)]
             vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
+            egg = None
 
-            path = path_finding(cross, start, vip, objects, end, wall_corners, robot_radius=robot_radius, width=width, height=height)
+            path = path_finding(cross, egg, start, vip, objects, end, wall_corners, robot_radius=robot_radius, width=width, height=height)
 
             self.assertIsInstance(path, list)
 

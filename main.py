@@ -3,6 +3,9 @@ import traceback
 import cv2
 from robotControls.point_to_point.controlCenter import points_to_commands, send_commands, connect
 
+import cv2
+
+
 from ImageRecognition.RoboFlow.MainImageRecognition import (
     initialize_camera, run_image_recognition, stop_image_recognition, get_wall_corners, get_vip_ball, get_balls, get_cross, get_egg,
     get_small_goal, get_angle, get_position, get_scale_factor, get_size)
@@ -12,6 +15,7 @@ import keyboard
 def pathing():
     try:
         cross = get_cross()
+        egg = get_egg()
         start = get_position()
         vip = get_vip_ball()
         balls = get_balls()
@@ -19,7 +23,13 @@ def pathing():
         end = get_small_goal()
         width, height = get_size()
 
-        path = path_finding(cross=cross, start=start, vip=vip, balls=balls, end=end, wall_corners=wall_corners, width=width, height=height)
+        if end:
+            end = (end[0] + (width / 2 - end[0]) / 5, end[1])
+
+        path = path_finding(
+            cross=cross,egg = egg, start=start, vip=vip, balls=balls, end=end,
+            wall_corners=wall_corners, width=width, height=height)
+
         if path is not None:
             print("Path found:", path)
             return path
@@ -28,7 +38,6 @@ def pathing():
     except Exception as e:
         print("Error in pathing thread:", e)
         traceback.print_exc()
-
 
 # Initialize the camera
 #initialize_camera()

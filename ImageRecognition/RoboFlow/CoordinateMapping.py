@@ -2,21 +2,10 @@ import cv2
 import numpy as np
 import math
 
-# Camera parameters (same as before)
-focal_length = 800
-cx, cy = 320, 240
-
-camera_matrix = np.array([
-    [focal_length, 0, cx],
-    [0, focal_length, cy],
-    [0, 0, 1]
-], dtype=np.float32)
-
-dist_coeffs = np.zeros((4, 1), dtype=np.float32)
-
-camera_height = 1  # meters
-aruco_marker_size = 0.178  # meters
-qr_height = 0  # assuming the ArUco marker is on the ground
+camera_height = 1.68  # meters
+scale_aruco_size = 0.15  # meters
+robot_aruco_size = 0.08  # meters
+robot_aruco_height = 0.2
 
 def find_aruco(image, scale_factor, width, height):
 
@@ -40,36 +29,44 @@ def find_aruco(image, scale_factor, width, height):
     if ids is not None:
         ids = ids.flatten()
         for i, marker_id in enumerate(ids):
-            if marker_id == 1: #Robot id should be 1
-                pts = corners[i][0].astype(np.float32)
-                cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 1)
-
-                # Estimate pose
-                rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-                    [pts], aruco_marker_size, camera_matrix.astype(np.float32), dist_coeffs.astype(np.float32)
-                )
-
-                rvec = rvecs[0][0]
-                tvec = tvecs[0][0]
-
-                # Compute orientation (yaw)
-                rotation_matrix, _ = cv2.Rodrigues(rvec)
-                angle_rad = math.atan2(rotation_matrix[1, 0], rotation_matrix[0, 0])
-                angle_deg = (math.degrees(angle_rad) + 360) % 360
-
-                # Compute position (real-world x, y on ground)
-                position = (tvec[0] * scale_factor, tvec[2] * scale_factor)
-
-                print(f"Marker ID: {marker_id}")
-                print(f"Position: x={position[0]:.2f} m, y={position[1]:.2f} m")
-                print(f"Direction: {angle_deg:.1f} degrees")
-
-                # Draw axis
-                cv2.drawFrameAxes(image, camera_matrix, dist_coeffs, rvec, tvec, 0.2)
-
-                break  # Stop after finding ID 1
-            else:
+            if marker_id == 1:  # Robot marker
                 pts = corners[i][0].astype(np.float32)
                 cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
+
+                # Original 2D image center of the marker
+                center_x = np.mean(pts[:, 0])
+                center_y = np.mean(pts[:, 1])
+
+                # Project marker to ground position
+                relative_height = camera_height - robot_aruco_height
+
+                # Assumed camera center in image
+                cx = width / 2
+                cy = height / 2
+
+                # Projected ground position in image pixels
+                projected_x = cx + (center_x - cx) * (relative_height / camera_height)
+                projected_y = cy + (center_y - cy) * (relative_height / camera_height)
+
+                # Convert to real-world units
+                real_x = projected_x * scale_factor
+                real_y = projected_y * scale_factor
+
+                position = (real_x, real_y)
+
+                # Estimate angle
+                dx = pts[1][0] - pts[0][0]
+                dy = pts[1][1] - pts[0][1]
+                angle_rad = math.atan2(dy, dx)
+                angle_deg = (math.degrees(angle_rad) + 360) % 360
+                print(angle_deg)
+
+            elif marker_id == 0: # Scale id should be 0
+                pts = corners[i][0].astype(np.float32)
+                cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
+
+                # Set scale factor based on the detected marker size
+                scale_factor = (scale_aruco_size / cv2.norm(pts[0] - pts[1])) * 100  # Convert to cm
+                print(scale_factor)
 
     return image, scale_factor, position, angle_deg
