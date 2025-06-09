@@ -19,7 +19,7 @@ def pathing():
         end = get_small_goal()
         width, height = get_size()
 
-        end += (width / 2 - end) / 5
+        end[1] += (width / 2 - end[1]) / 5
 
         path = path_finding(cross=cross, start=start, vip=vip, balls=balls, end=end, wall_corners=wall_corners, width=width, height=height)
         if path is not None:
