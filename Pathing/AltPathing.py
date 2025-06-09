@@ -298,7 +298,6 @@ def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
 
 def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vip, width, height, ball_diameter=4, original_obstacles=None):
     plt.ion() # Interactive mode
-
     plt.clf()
     fig, ax = plt.gcf(), plt.gca()
 
@@ -361,7 +360,7 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     #plt.show()
 
 def path_finding(
-        cross, egg, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
+        cross, egg, start, vip, balls, end, wall_corners, robot_radius=10.5, width=160, height=120):
 
     if not balls:
         return []
@@ -408,7 +407,7 @@ class TestPathFinding(unittest.TestCase):
             cx = random.uniform(margin, offset_width)
             cy = random.uniform(margin, offset_height)
             cross = generate_random_cross(cx, cy, size=20)
-            robot_radius = 2
+            robot_radius = 10.5
 
             start = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
             end = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
@@ -417,12 +416,14 @@ class TestPathFinding(unittest.TestCase):
             vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
             egg = None
 
-            path = path_finding(cross, egg, start, vip, objects, end, wall_corners, robot_radius=robot_radius, width=width, height=height)
+            path = path_finding(cross=cross, egg=egg, start=start, vip=vip, balls=objects, end=end,
+                                wall_corners=wall_corners, robot_radius=robot_radius, width=width, height=height)
 
             self.assertIsInstance(path, list)
 
             obstacles = []
             obstacles += convert_cross_to_polygons(cross, 3)
+            obstacles += create_egg(egg, 4.5) if egg else []
             inflated_obstacles = [obs.buffer(robot_radius).simplify(0.5) for obs in obstacles]
             if any(Polygon(obs).contains(Point(start)) or Polygon(obs).contains(Point(end)) for obs in inflated_obstacles):
                 self.assertEqual(len(path), 0, "There should be no path if start or end is inside an obstacle")
