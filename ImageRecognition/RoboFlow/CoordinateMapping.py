@@ -41,34 +41,24 @@ def find_aruco(image, scale_factor, width, height):
     if ids is not None:
         ids = ids.flatten()
         for i, marker_id in enumerate(ids):
-            if marker_id == 1: #Robot id should be 1
+            if marker_id == 1:  # Robot marker
                 pts = corners[i][0].astype(np.float32)
-                cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 1)
+                cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
+                center_x = np.mean(pts[:, 0])
+                center_y = np.mean(pts[:, 1])
 
-                # Estimate pose
-                rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-                    [pts], robot_aruco_size, camera_matrix.astype(np.float32), dist_coeffs.astype(np.float32)
-                )
+                # Scale factor is from earlier detected scale marker
+                # position in real world (in meters or cm)
+                real_x = center_x * scale_factor
+                real_y = center_y * scale_factor
 
-                rvec = rvecs[0][0]
-                tvec = tvecs[0][0]
-
-                # Compute orientation (yaw)
-                rotation_matrix, _ = cv2.Rodrigues(rvec)
-                angle_rad = math.atan2(rotation_matrix[1, 0], rotation_matrix[0, 0])
+                # Estimate angle
+                dx = pts[1][0] - pts[0][0]
+                dy = pts[1][1] - pts[0][1]
+                angle_rad = math.atan2(dy, dx)
                 angle_deg = (math.degrees(angle_rad) + 360) % 360
 
-                # Compute position (real-world x, y on ground)
-                position = (tvec[0] * scale_factor, tvec[2] * scale_factor)
-
-                print(f"Marker ID: {marker_id}")
-                print(f"Position: x={position[0]:.2f} m, y={position[1]:.2f} m")
-                print(f"Direction: {angle_deg:.1f} degrees")
-
-                # Draw axis
-                cv2.drawFrameAxes(image, camera_matrix, dist_coeffs, rvec, tvec, 0.2)
-
-                break  # Stop after finding ID 1
+                position = (real_x, real_y)
             elif marker_id == 0: # Scale id should be 0
                 pts = corners[i][0].astype(np.float32)
                 cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
