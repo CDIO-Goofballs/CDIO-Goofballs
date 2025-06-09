@@ -329,9 +329,6 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
 
     ax.add_patch(Circle(end, radius, color='red', label='End'))
 
-    for point in full_path:
-        print(f"Point: {point}")
-
     # Path
     if full_path:
         xs, ys, types = zip(*full_path)
@@ -405,7 +402,6 @@ class TestPathFinding(unittest.TestCase):
         wall_corners = ((0, 0), (0, height), (width, height), (width, 0))
 
         for i in range(5):  # Run 5 times
-            print("Test: " + str(i + 1))
             margin = 20
             offset_height = height - margin
             offset_width = width - margin
