@@ -5,7 +5,7 @@ import math
 camera_height = 1.68  # meters
 scale_aruco_size = 0.15  # meters
 robot_aruco_size = 0.08  # meters
-robot_aruco_height = 0.2
+robot_aruco_height = 0.3
 
 def find_aruco(image, scale_factor, width, height):
 
