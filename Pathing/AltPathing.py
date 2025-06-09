@@ -301,6 +301,9 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
 
     plt.clf()
     fig, ax = plt.gcf(), plt.gca()
+
+    #fig, ax = plt.subplots()
+
     fig.set_size_inches(8, 6, True)
     radius = ball_diameter / 2
 
@@ -357,6 +360,8 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     # Draw the figure non-blocking
     fig.canvas.draw()
     fig.canvas.flush_events()
+
+    #plt.show()
 
 def path_finding(cross, egg, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
     if not balls:
