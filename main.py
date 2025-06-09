@@ -2,6 +2,7 @@ import time
 import traceback
 
 import cv2
+import numpy as np
 
 from ImageRecognition.RoboFlow.MainImageRecognition import (
     initialize_camera, run_image_recognition, stop_image_recognition, get_wall_corners, get_vip_ball, get_balls, get_cross, get_egg,
@@ -18,6 +19,8 @@ def pathing():
         end = get_small_goal()
         width, height = get_size()
 
+        end += (width / 2 - end) / 5
+
         path = path_finding(cross=cross, start=start, vip=vip, balls=balls, end=end, wall_corners=wall_corners, width=width, height=height)
         if path is not None:
             print("Path found:", path)
@@ -26,7 +29,6 @@ def pathing():
     except Exception as e:
         print("Error in pathing thread:", e)
         traceback.print_exc()
-
 
 # Initialize the camera
 initialize_camera()
