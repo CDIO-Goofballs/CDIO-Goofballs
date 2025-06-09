@@ -363,7 +363,9 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
 
     #plt.show()
 
-def path_finding(cross, egg, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
+def path_finding(
+        cross, egg, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
+
     if not balls:
         return []
 
