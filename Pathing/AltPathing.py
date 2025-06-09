@@ -3,13 +3,12 @@ import unittest
 
 import numpy as np
 from shapely.geometry import Point, LineString, Polygon
-from shapely.prepared import prep
 import networkx as nx
 from networkx.algorithms.approximation import traveling_salesman_problem
-import itertools
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPolygon, Circle
 import random
+from shapely.geometry import Point
 
 def is_visible(p1, p2, obstacles):
     """
@@ -255,6 +254,9 @@ def create_wall_polygon(p1, p2, thickness=1.5):
         (p1[0] - offset_x, p1[1] - offset_y)
     ])
 
+def create_egg(egg, radius=4.5):
+    return [Point(egg).buffer(radius)]
+
 def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
     """
     Given 4 corners: (top_left, bottom_left, bottom_right, top_right),
@@ -356,7 +358,7 @@ def extract_turn_points(path, angle_threshold_degrees=5):
 
     return turn_points
 
-def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
+def path_finding(cross, egg, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
     if not balls:
         return []
     if cross:
@@ -371,8 +373,13 @@ def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, wi
     else:
         boundary_walls = []
 
+    if egg:
+        egg_obstacle = create_egg(egg)
+    else:
+        egg_obstacle = []
+
     # Combine all obstacles
-    obstacles = cross_obstacles + boundary_walls
+    obstacles = cross_obstacles + boundary_walls + egg_obstacle
 
     if not start:
         start = (100, 100) # TODO: Remove after goal position is used

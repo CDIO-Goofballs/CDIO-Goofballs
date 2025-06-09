@@ -2,7 +2,7 @@ import time
 import traceback
 
 import cv2
-import numpy as np
+
 
 from ImageRecognition.RoboFlow.MainImageRecognition import (
     initialize_camera, run_image_recognition, stop_image_recognition, get_wall_corners, get_vip_ball, get_balls, get_cross, get_egg,
@@ -12,6 +12,7 @@ from Pathing.AltPathing import path_finding
 def pathing():
     try:
         cross = get_cross()
+        egg = get_egg()
         start = get_position()
         vip = get_vip_ball()
         balls = get_balls()
@@ -19,9 +20,10 @@ def pathing():
         end = get_small_goal()
         width, height = get_size()
 
-        end = (end[0] + (width / 2 - end[0]) / 5, end[1])
+        if end:
+            end = (end[0] + (width / 2 - end[0]) / 5, end[1])
 
-        path = path_finding(cross=cross, start=start, vip=vip, balls=balls, end=end, wall_corners=wall_corners, width=width, height=height)
+        path = path_finding(cross=cross, egg = egg, start=start, vip=vip, balls=balls, end=end, wall_corners=wall_corners, width=width, height=height)
         if path is not None:
             print("Path found:", path)
         else:
