@@ -14,9 +14,10 @@ camera_matrix = np.array([
 
 dist_coeffs = np.zeros((4, 1), dtype=np.float32)
 
-camera_height = 1  # meters
-aruco_marker_size = 0.178  # meters
-qr_height = 0  # assuming the ArUco marker is on the ground
+camera_height = 1.70  # meters
+scale_aruco_size = 0.15  # meters
+robot_aruco_size = 0.08  # meters
+robot_aruco_height = 0.4
 
 def find_aruco(image, scale_factor, width, height):
 
@@ -46,7 +47,7 @@ def find_aruco(image, scale_factor, width, height):
 
                 # Estimate pose
                 rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-                    [pts], aruco_marker_size, camera_matrix.astype(np.float32), dist_coeffs.astype(np.float32)
+                    [pts], robot_aruco_size, camera_matrix.astype(np.float32), dist_coeffs.astype(np.float32)
                 )
 
                 rvec = rvecs[0][0]
@@ -68,8 +69,12 @@ def find_aruco(image, scale_factor, width, height):
                 cv2.drawFrameAxes(image, camera_matrix, dist_coeffs, rvec, tvec, 0.2)
 
                 break  # Stop after finding ID 1
-            else:
+            elif marker_id == 0: # Scale id should be 0
                 pts = corners[i][0].astype(np.float32)
                 cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
+
+                # Set scale factor based on the detected marker size
+                scale_factor = (scale_aruco_size / cv2.norm(pts[0] - pts[1])) * 100  # Convert to cm
+                print(scale_factor)
 
     return image, scale_factor, position, angle_deg

@@ -375,7 +375,7 @@ def path_finding(cross, start, vip, balls, end, wall_corners, robot_radius=2, wi
     obstacles = cross_obstacles + boundary_walls
 
     if not start:
-        start = (200, 200) # TODO: Remove after goal position is used
+        start = (100, 100) # TODO: Remove after goal position is used
 
     # Inflate obstacles
     inflated_obstacles = [obs.buffer(robot_radius).simplify(0.5) for obs in obstacles]
