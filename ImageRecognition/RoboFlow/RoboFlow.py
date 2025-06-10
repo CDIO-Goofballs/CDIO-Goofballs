@@ -10,6 +10,7 @@ egg = None
 cross = None
 small_goal = None
 wall_corners = None
+big_goal = None
 
 def point_x(point):
   return point.x
@@ -25,6 +26,7 @@ def object_recognition(img, scale_factor):
     global cross
     global egg
     global small_goal
+    global big_goal
     global wall_corners
     # run inference on our chosen image, image can be a url, a numpy array, a PIL image, etc.
     balls.clear()
@@ -33,6 +35,7 @@ def object_recognition(img, scale_factor):
     cross = None
     egg = None
     small_goal = None
+    big_goal = None
 
     results = model.infer(img)[0]
     predictions = results.predictions
@@ -58,6 +61,8 @@ def object_recognition(img, scale_factor):
                 egg = (prediction.x * scale_factor, prediction.y * scale_factor)
             case "Small-goal":
                 small_goal = (prediction.x * scale_factor, prediction.y * scale_factor)
+            case "Big-goal":
+                big_goal = (prediction.x * scale_factor, prediction.y * scale_factor)
 
     # load the results into the supervision Detections api
     detections = sv.Detections.from_inference(results)
@@ -84,4 +89,4 @@ def object_recognition(img, scale_factor):
         top_right = xminusy_sort[-1]
         wall_corners = (top_left, bottom_left, bottom_right, top_right)
 
-    return annotated_image, balls, vip_ball, wall_corners, cross, egg, small_goal
+    return annotated_image, balls, vip_ball, wall_corners, cross, egg, small_goal, big_goal

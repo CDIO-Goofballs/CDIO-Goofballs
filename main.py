@@ -6,7 +6,7 @@ import cv2
 
 from ImageRecognition.RoboFlow.MainImageRecognition import (
     initialize_camera, run_image_recognition, stop_image_recognition, get_wall_corners, get_vip_ball, get_balls, get_cross, get_egg,
-    get_small_goal, get_angle, get_position, get_scale_factor, get_size)
+    get_small_goal, get_big_goal, get_angle, get_position, get_scale_factor, get_size)
 from Pathing.AltPathing import path_finding
 
 def pathing():
@@ -20,6 +20,8 @@ def pathing():
         end = get_small_goal()
         width, height = get_size()
 
+        if not end:
+            end = get_big_goal()
         if end:
             end = (end[0] + (width / 2 - end[0]) / 5, end[1])
 
@@ -41,12 +43,12 @@ initialize_camera()
 while True:
     print("--------------Start------------------")
     start_time = time.time()
-    run_image_recognition()
+    has_ended = run_image_recognition()
     print ("Time taken for image recognition:", time.time() - start_time)
     pathing()
     print ("Time taken for image recognition and pathing:", time.time() - start_time)
     print("--------------End--------------------")
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if has_ended:
         break
 
 stop_image_recognition()
