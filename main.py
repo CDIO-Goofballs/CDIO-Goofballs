@@ -40,7 +40,7 @@ def pathing():
         traceback.print_exc()
 
 # Initialize the camera
-initialize_camera()
+#initialize_camera()
 
 #while True:
 keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
@@ -48,8 +48,7 @@ print("--------------Start------------------")
 #connect()
 start_time = time.time()
 img = cv2.imread('test_image.png')
-run_image_recognition()
-run_image_recognition()
+run_image_recognition(imageFrame=img)
 print ("Time taken for image recognition:", time.time() - start_time)
 path = pathing()
 cmds = points_to_commands(get_angle(), path)
