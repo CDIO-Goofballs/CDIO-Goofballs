@@ -1,7 +1,7 @@
 import time
 import traceback
 import cv2
-from robotControls.point_to_point.controlCenter import points_to_commands, send_commands, connect
+from robotControls.point_to_point.controlCenter import points_to_commands, send_commands, connect, send_command, Command
 
 import cv2
 
@@ -40,19 +40,21 @@ def pathing():
         traceback.print_exc()
 
 # Initialize the camera
-#initialize_camera()
+initialize_camera()
 
 #while True:
+keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
 print("--------------Start------------------")
-connect()
+#connect()
 start_time = time.time()
 img = cv2.imread('test_image.png')
-run_image_recognition(imageFrame=img)
+run_image_recognition()
+run_image_recognition()
 print ("Time taken for image recognition:", time.time() - start_time)
 path = pathing()
-cmds = points_to_commands(0, path)
+cmds = points_to_commands(get_angle(), path)
 print(cmds)
-send_commands(cmds)
+#send_commands(cmds)
 print ("Time taken for image recognition and pathing:", time.time() - start_time)
 print("--------------End--------------------")
 keyboard.wait('q')

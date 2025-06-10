@@ -90,7 +90,7 @@ def send_commands(commands):
 
 
 
-keyboard.add_hotkey('b', send_commands, args=(points_to_commands(robot_start_angle=robot_start_angle, positions=positions),))
+#keyboard.add_hotkey('b', send_commands, args=(points_to_commands(robot_start_angle=robot_start_angle, positions=positions),))
 keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
 #keyboard.add_hotkey('w', send_command, args=((Command.DRIVE, 800),))
 #keyboard.add_hotkey('d', send_command, args=((Command.TURN, 90),))
