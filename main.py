@@ -93,3 +93,10 @@ def no_robot(camera_index=0):
           break
 
   stop_image_recognition()
+
+if __name__ == "__main__":
+    # Uncomment the line below to run with the robot and a specific camera index
+    # with_robot(camera_index=0)
+
+    # Uncomment the line below to run without the robot and a specific camera index
+    no_robot(camera_index=0)
