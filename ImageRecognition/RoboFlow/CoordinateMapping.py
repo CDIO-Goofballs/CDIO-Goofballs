@@ -19,8 +19,6 @@ def find_aruco(image, scale_factor, width, height):
     # Detect the markers
     corners, ids, rejected = detector.detectMarkers(gray)
 
-    print("Detected markers:", ids)
-
     angle_deg = 0
     position = None
     projected_x = None
@@ -53,7 +51,6 @@ def find_aruco(image, scale_factor, width, height):
                 dy = pts[1][1] - pts[0][1]
                 angle_rad = math.atan2(dy, dx)
                 angle_deg = (math.degrees(angle_rad) + 360) % 360
-                print(angle_deg)
 
             elif marker_id == 0: # Scale id should be 0
                 pts = corners[i][0].astype(np.float32)
@@ -61,7 +58,6 @@ def find_aruco(image, scale_factor, width, height):
 
                 # Set scale factor based on the detected marker size
                 scale_factor = (scale_aruco_size / cv2.norm(pts[0] - pts[1])) * 100  # Convert to cm
-                print(scale_factor)
 
     if projected_x and projected_y:
         # Convert to real-world units

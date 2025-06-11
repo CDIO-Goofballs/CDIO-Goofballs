@@ -50,7 +50,6 @@ def object_recognition(img, scale_factor):
                 if vip_confidence < prediction.confidence:
                     vip_ball = (prediction.x * scale_factor, prediction.y * scale_factor)
                     vip_confidence = prediction.confidence
-                print("VIPpred:", prediction)
             case "Wall":
                 for point in prediction.points:
                     wall_points.append( (scale_factor * point.x, scale_factor * point.y) )
