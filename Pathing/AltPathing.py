@@ -10,6 +10,19 @@ from matplotlib.patches import Polygon as MplPolygon, Circle
 import random
 from shapely.geometry import Point
 
+def find_nearest_free_point(point, obstacles, search_radius=12, step=1):
+    """
+    Given a point inside an obstacle, return the nearest visible point outside all obstacles.
+    """
+    for r in np.arange(step, search_radius, step):
+        # Sample points around the circle
+        for angle in np.linspace(0, 2 * math.pi, int(2 * math.pi * r / step)):
+            dx, dy = r * math.cos(angle), r * math.sin(angle)
+            candidate = Point(point[0] + dx, point[1] + dy)
+            if not any(obs.contains(candidate) for obs in obstacles):
+                return (candidate.x, candidate.y)
+    return None
+
 def is_visible(p1, p2, obstacles):
     """
     Check if the line segment p1->p2 does not intersect any obstacle (except at endpoints).
@@ -184,6 +197,18 @@ def plan_route_free_space(start, vip, others, end, obstacles):
     # Reconstruct the filtered points
     new_vip = vip if vip_idx in reachable else None
     filtered_others = [pt for i, pt in enumerate(others, start=2 if vip is not None else 1) if i in reachable]
+    #filtered_others = []
+    #ball_start_idx = 2 if vip is not None else 1
+    #for i, pt in enumerate(others):
+    #    idx = i + ball_start_idx
+    #    if idx in reachable:
+    #        filtered_others.append(pt)
+    #    else:
+    #        # Try to find nearest reachable point outside inflated obstacles
+    #        replacement = find_nearest_free_point(pt, obstacles)
+    #        if replacement:
+    #            filtered_others.append(replacement)
+
     filtered_end = end if (len(points) - 1) in reachable else None
 
     if filtered_end is None:
@@ -281,7 +306,7 @@ def create_wall_polygon(p1, p2, thickness=1.5):
     ])
 
 def create_egg(egg, radius=4.5):
-    return [Point(egg).buffer(radius)]
+    return [Point(egg).buffer(radius).simplify(1.5)]
 
 def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
     """
@@ -297,8 +322,7 @@ def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
     ]
 
 def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vip, width, height, ball_diameter=4, original_obstacles=None):
-    plt.ion()
-    
+    plt.ion() # Interactive mode
     plt.clf()
     fig, ax = plt.gcf(), plt.gca()
 
@@ -360,7 +384,7 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     #plt.show()
 
 def path_finding(
-        cross, egg, start, vip, balls, end, wall_corners, robot_radius=2, width=160, height=120):
+        cross, egg, start, vip, balls, end, wall_corners, robot_radius=10.5, width=160, height=120):
 
     if not balls:
         return []
@@ -376,12 +400,10 @@ def path_finding(
         start = (100, 100) # TODO: Remove after goal position is used
 
     # Inflate obstacles
-    inflated_obstacles = [obs.buffer(robot_radius).simplify(0.5) for obs in obstacles]
+    inflated_obstacles = [obs.buffer(robot_radius).simplify(1.5) for obs in obstacles]
 
-    # Pass raw inflated to build_visibility_graph (needs .coords),
-    # but prepared obstacles to is_visible (for performance)
     best_order, best_length, full_path, has_vip = plan_route_free_space(
-        start, vip, balls, end, inflated_obstacles  # <- RAW inflated
+        start, vip, balls, end, inflated_obstacles
     )
 
     plot_route(start, vip, balls, end, inflated_obstacles, full_path, best_order, has_vip, width=width, height=height, original_obstacles=obstacles)
@@ -404,10 +426,10 @@ class TestPathFinding(unittest.TestCase):
             margin = 20
             offset_height = height - margin
             offset_width = width - margin
-            cx = random.uniform(margin, offset_width)
-            cy = random.uniform(margin, offset_height)
+            cx = random.uniform(margin * 3.5, width - margin * 3.5)
+            cy = random.uniform(margin * 2.5, height - margin * 2.5)
             cross = generate_random_cross(cx, cy, size=20)
-            robot_radius = 2
+            robot_radius = 10.5
 
             start = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
             end = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
@@ -416,13 +438,15 @@ class TestPathFinding(unittest.TestCase):
             vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
             egg = None
 
-            path = path_finding(cross, egg, start, vip, objects, end, wall_corners, robot_radius=robot_radius, width=width, height=height)
+            path = path_finding(cross=cross, egg=egg, start=start, vip=vip, balls=objects, end=end,
+                                wall_corners=wall_corners, robot_radius=robot_radius, width=width, height=height)
 
             self.assertIsInstance(path, list)
 
             obstacles = []
             obstacles += convert_cross_to_polygons(cross, 3)
-            inflated_obstacles = [obs.buffer(robot_radius).simplify(0.5) for obs in obstacles]
+            obstacles += create_egg(egg, 4.5) if egg else []
+            inflated_obstacles = [obs.buffer(robot_radius).simplify(1.5) for obs in obstacles]
             if any(Polygon(obs).contains(Point(start)) or Polygon(obs).contains(Point(end)) for obs in inflated_obstacles):
                 self.assertEqual(len(path), 0, "There should be no path if start or end is inside an obstacle")
             else:

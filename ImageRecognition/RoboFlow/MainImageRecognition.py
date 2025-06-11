@@ -1,7 +1,7 @@
 import time
 
 import cv2
-from ImageRecognition.RoboFlow.RoboFlow import object_recognition
+from ImageRecognition.RoboFlow.RoboFlow import object_recognition, big_goal
 from ImageRecognition.RoboFlow.CoordinateMapping import find_aruco
 
 scale_factor = 1
@@ -33,11 +33,11 @@ def run_image_recognition(imageFrame=None):
 
     imageFrame, scale_factor, latest_position, latest_angle = find_aruco(imageFrame, scale_factor, frame_width,
                                                                       frame_height)
-    imageFrame, balls, vip_ball, wall_corners, cross, egg, small_goal = object_recognition(imageFrame, scale_factor)
+    imageFrame, balls, vip_ball, wall_corners, cross, egg, small_goal, big_goal = object_recognition(imageFrame, scale_factor)
 
     # Display the captured frame
     cv2.imshow("ImageRecognition", imageFrame)
-    cv2.waitKey(1)
+    return cv2.waitKey(1) & 0xFF == ord('q')
 
 def stop_image_recognition():
     # Release the capture and writer objects
@@ -102,6 +102,12 @@ def get_small_goal():
     :return: None if no small goal is detected, otherwise a tuple (x, y) representing the position of the small goal.
     """
     return small_goal
+def get_big_goal():
+    """
+    Returns the big goal position.
+    :return: None if no big goal is detected, otherwise a tuple (x, y) representing the position of the big goal.
+    """
+    return big_goal
 def get_size():
     """
     Returns the size of the image frame used for scaling.

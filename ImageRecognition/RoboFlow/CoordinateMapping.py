@@ -8,7 +8,6 @@ robot_aruco_size = 0.08  # meters
 robot_aruco_height = 0.35
 
 def find_aruco(image, scale_factor, width, height):
-
     # Convert the image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_ARUCO_ORIGINAL)
@@ -22,9 +21,10 @@ def find_aruco(image, scale_factor, width, height):
 
     print("Detected markers:", ids)
 
-    position = None
     angle_deg = 0
-
+    position = None
+    projected_x = None
+    projected_y = None
 
     if ids is not None:
         ids = ids.flatten()
@@ -48,12 +48,6 @@ def find_aruco(image, scale_factor, width, height):
                 projected_x = cx + (center_x - cx) * (relative_height / camera_height)
                 projected_y = cy + (center_y - cy) * (relative_height / camera_height)
 
-                # Convert to real-world units
-                real_x = projected_x * scale_factor
-                real_y = projected_y * scale_factor
-
-                position = (real_x, real_y)
-
                 # Estimate angle
                 dx = pts[1][0] - pts[0][0]
                 dy = pts[1][1] - pts[0][1]
@@ -68,5 +62,11 @@ def find_aruco(image, scale_factor, width, height):
                 # Set scale factor based on the detected marker size
                 scale_factor = (scale_aruco_size / cv2.norm(pts[0] - pts[1])) * 100  # Convert to cm
                 print(scale_factor)
+
+    if projected_x and projected_y:
+        # Convert to real-world units
+        real_x = projected_x * scale_factor
+        real_y = projected_y * scale_factor
+        position = (real_x, real_y)
 
     return image, scale_factor, position, angle_deg
