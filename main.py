@@ -43,19 +43,21 @@ def pathing():
         traceback.print_exc()
         return []
 
-def with_robot(image=None)
-  keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
-  connect()
-  run_image_recognition(image)
-  print("Robot start angle: ", get_angle())
-  path = pathing()
-  modified_path = [(10 * p[0], -10 * p[1]) for p in path]
-  cmds = points_to_commands(get_angle() + 90, modified_path)
-  send_command((Command.SERVO, -30),)
-  send_commands(cmds)
-  keyboard.wait('q')
-  """
-  def use_path(path):
+def with_robot(image=None, camera_index=0):
+    if not image:
+        initialize_camera(camera_index)
+    keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
+    connect()
+    run_image_recognition(image)
+    print("Robot start angle: ", get_angle())
+    path = pathing()
+    modified_path = [(10 * p[0], -10 * p[1]) for p in path]
+    cmds = points_to_commands(get_angle() + 90, modified_path)
+    send_command((Command.SERVO, -30),)
+    send_commands(cmds)
+    keyboard.wait('q')
+    """
+    def use_path(path):
       init_robot_angle = get_angle()
       path = pathing()
       error = 2
@@ -73,11 +75,11 @@ def with_robot(image=None)
                   send_command((Command.STOP, None),) # clear queue
                   break
               send_commands(cmds)            
-  """
+"""
 
-def no_robot()
+def no_robot(camera_index=0):
   # Initialize the camera
-  initialize_camera()
+  initialize_camera(camera_index)
 
   while True:
       print("--------------Start------------------")
