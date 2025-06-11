@@ -297,6 +297,8 @@ def create_boundary_walls_from_corners(wall_corners, thickness=1.5):
     ]
 
 def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vip, width, height, ball_diameter=4, original_obstacles=None):
+    plt.ion()
+    
     plt.clf()
     fig, ax = plt.gcf(), plt.gca()
 
@@ -352,7 +354,8 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     ax.set_ylim(0, height)
     ax.grid(True)
 
-    plt.show()
+    fig.canvas.draw()
+    fig.canvas.flush_events()
 
     #plt.show()
 

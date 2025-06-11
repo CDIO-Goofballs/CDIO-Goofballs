@@ -7,4 +7,4 @@ def calculate_turn(p1, p2, orientation: float):
     return (turn_angle + 180) % 360 - 180 # Normalize turn_angle to the range -180 to 180
 
 def calculate_distance(p1, p2):
-    return math.sqrt((p2[0] - p1[0])**2+(p2[1] - p1[1])**2)*10 - 270 # subtract robot length
+    return math.sqrt((p2[0] - p1[0])**2+(p2[1] - p1[1])**2)

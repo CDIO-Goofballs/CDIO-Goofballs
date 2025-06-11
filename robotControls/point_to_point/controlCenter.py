@@ -6,23 +6,6 @@ from robotControls.point_to_point.point import calculate_turn, calculate_distanc
 import time
 import keyboard
 
-positions = [
-    (0,0),
-    (1000,0),
-    (1000,1000),
-    (0,1000),
-    (0,0)
-]
-
-"""positions = [
-    Point(0,0),
-    Point(1000,1000),
-    Point(1600,0),
-    Point(1600,-1200),
-    Point(400,1000),
-    Point(0,0)
-]"""
-robot_start_angle = 90 # 0 is towards positive on the x-axis
 port = 12345
 server_socket = None
 conn = None
@@ -59,7 +42,7 @@ class Command(Enum):
     DRIVE = "drive"
     TURN = "turn"
     STOP = "stop"
-    SERVO= "servo"
+    SERVO = "servo"
 
 def send_command(command: tuple[Command, Any]):
     print(command)
@@ -73,6 +56,7 @@ def send_command(command: tuple[Command, Any]):
         reconnect()
 
 def points_to_commands(robot_start_angle, positions):
+    print("Robot start angle: ", robot_start_angle)
     commands = []
     current_angle = robot_start_angle
 
@@ -88,8 +72,6 @@ def send_commands(commands):
     for command in commands:
         send_command(command)
 
-
-
 #keyboard.add_hotkey('b', send_commands, args=(points_to_commands(robot_start_angle=robot_start_angle, positions=positions),))
 keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
 #keyboard.add_hotkey('w', send_command, args=((Command.DRIVE, 800),))
@@ -99,5 +81,3 @@ keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
 keyboard.add_hotkey('t', send_command, args=((Command.SERVO, -30),))
 keyboard.add_hotkey('y', send_command, args=((Command.SERVO, 0),))
 keyboard.add_hotkey('u', send_command, args=((Command.SERVO, 80),))
-
-#keyboard.wait('q')

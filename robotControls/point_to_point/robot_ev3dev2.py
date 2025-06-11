@@ -13,6 +13,9 @@ WHEEL_DIAMETER_MM = 67 # Real life size is 68.8 mm
 WHEEL_WIDTH_MM = 36 # Real life size is 36 mm
 WHEEL_BASE_MM = 290 # Real life size is 170 mm
 
+ROTATION_SPEED = 10
+STRAIGHT_SPEED = 10
+
 SERVER_IP = '192.168.137.1'
 SERVER_PORT = 12345
 
@@ -45,7 +48,7 @@ def stop():
     while (not queue.empty()):
         queue.get()
     
-"""def adjust_to_gyro(target_deg, speed=20):
+def adjust_to_gyro(target_deg, speed=20):
     print("Target angle: ", target_deg)
     while move_diff.gyro.angle - target_deg > 1 and not stop_event.is_set():  # allow a tiny error range
         current_angle = move_diff.gyro.angle
@@ -56,15 +59,16 @@ def stop():
         else:
             # turn left (counter-clockwise)
             move_diff.turn_left(SpeedPercent(speed), 2)
-        time.sleep(0.01)"""
+        time.sleep(0.01)
     
-def rotate(angle, speed=30):
+def rotate(angle, speed=ROTATION_SPEED):
+    print("Trying to turn: ", angle)
     move_diff.turn_degrees(speed = SpeedPercent(speed), degrees = angle, use_gyro = False)
-    #adjust_to_gyro(-angle)
-    #move_diff.gyro.reset()
+    adjust_to_gyro(-angle)
+    move_diff.gyro.reset()
     
 
-def straight(distance, speed = 30):
+def straight(distance, speed = STRAIGHT_SPEED):
     if distance > 0:
         move_diff.on_for_distance(SpeedPercent(speed), -distance)
     else:
@@ -78,7 +82,7 @@ def execute_command():
         cmd = command[0]
         arg = command[1]
         if(cmd == "drive"): straight(float(arg)) # Invert directionen since front is back.
-        elif(cmd == "turn"): rotate(-float(arg))
+        elif(cmd == "turn"): rotate(float(arg))
         elif(cmd == "servo"): move_servo(int(arg))
         time.sleep(0.1)
 

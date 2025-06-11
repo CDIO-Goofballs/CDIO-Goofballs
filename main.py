@@ -35,25 +35,42 @@ def pathing():
             return path
         else:
             print("No path found.")
+            return []
     except Exception as e:
         print("Error in pathing thread:", e)
         traceback.print_exc()
+        return []
 
 # Initialize the camera
-#initialize_camera()
-
-#while True:
+initialize_camera()
 keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
-print("--------------Start------------------")
-#connect()
-start_time = time.time()
-img = cv2.imread('test_image.png')
-run_image_recognition(imageFrame=img)
-print ("Time taken for image recognition:", time.time() - start_time)
+connect()
+run_image_recognition()
+run_image_recognition()
+print("Robot start angle: ", get_angle())
 path = pathing()
-cmds = points_to_commands(get_angle(), path)
-print(cmds)
-#send_commands(cmds)
-print ("Time taken for image recognition and pathing:", time.time() - start_time)
-print("--------------End--------------------")
+modified_path = [(10 * p[0], -10 * p[1]) for p in path]
+cmds = points_to_commands(get_angle() + 90, modified_path)
+send_command((Command.SERVO, -30),)
+send_commands(cmds)
 keyboard.wait('q')
+"""
+def use_path(path):
+    init_robot_angle = get_angle()
+    path = pathing()
+    error = 2
+    if(path == None):
+        print("Path is None")
+        return
+    while len(get_balls()) > 0: # Runs during the whole course
+        dest_reached = False
+        path = pathing()
+        while not dest_reached: # Runs during the travel to one ball
+            run_image_recognition()
+            cmds = points_to_commands(get_angle(), path[0:2])
+            print(cmds)
+            if(abs(init_robot_angle - get_angle()) > error):
+                send_command((Command.STOP, None),) # clear queue
+                break
+            send_commands(cmds)            
+"""
