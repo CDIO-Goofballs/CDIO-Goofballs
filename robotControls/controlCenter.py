@@ -2,7 +2,7 @@ import socket
 import keyboard
 from typing import Any
 from enum import Enum
-from robotControls.point_to_point.point import calculate_turn, calculate_distance
+from robotControls.point import calculate_turn, calculate_distance
 import time
 import keyboard
 

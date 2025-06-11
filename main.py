@@ -1,7 +1,7 @@
 import time
 import traceback
 import cv2
-from robotControls.point_to_point.controlCenter import points_to_commands, send_commands, connect, send_command, Command
+from robotControls.controlCenter import points_to_commands, send_commands, connect, send_command, Command, calculate_distance, calculate_turn
 
 import cv2
 
@@ -11,6 +11,8 @@ from ImageRecognition.RoboFlow.MainImageRecognition import (
     get_small_goal, get_big_goal, get_angle, get_position, get_scale_factor, get_size)
 from Pathing.Pathing import path_finding
 import keyboard
+
+ROBOT_LENGTH = 270
 
 def pathing():
     try:
@@ -43,39 +45,69 @@ def pathing():
         traceback.print_exc()
         return []
 
+def get_difference_in_position(robot_position, new_robot_position):
+    if robot_position is None or new_robot_position is None:
+        return -1
+    return abs(calculate_distance(robot_position, new_robot_position))
+    
+def get_difference_in_angle(robot_angle, new_robot_angle):
+    if robot_angle is None or new_robot_angle is None:
+        return -1
+    return abs(robot_angle - new_robot_angle)
+    
 def with_robot(image=None, camera_index=0):
     if not image:
         initialize_camera(camera_index)
-    keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
+        
     connect()
+    keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
     run_image_recognition(image)
-    print("Robot start angle: ", get_angle())
-    path = pathing()
-    modified_path = [(10 * p[0], -10 * p[1]) for p in path]
-    cmds = points_to_commands(get_angle() + 90, modified_path)
-    send_command((Command.SERVO, -30),)
-    send_commands(cmds)
-    keyboard.wait('q')
-    """
-    def use_path(path):
-      init_robot_angle = get_angle()
-      path = pathing()
-      error = 2
-      if(path == None):
-          print("Path is None")
-          return
-      while len(get_balls()) > 0: # Runs during the whole course
-          dest_reached = False
-          path = pathing()
-          while not dest_reached: # Runs during the travel to one ball
-              run_image_recognition()
-              cmds = points_to_commands(get_angle(), path[0:2])
-              print(cmds)
-              if(abs(init_robot_angle - get_angle()) > error):
-                  send_command((Command.STOP, None),) # clear queue
-                  break
-              send_commands(cmds)            
-"""
+    collect_balls(image)
+    run_image_recognition(image)
+    if len(get_balls()) > 0 or get_vip_ball() is not None:
+        collect_balls(image)
+    print("------------DONE--------------")
+
+    
+def rotate_with_cam(target, image):
+    run_image_recognition(image)
+    while abs(target - get_angle() > 1):
+        if target > get_angle():
+            send_command((Command.TURN, 1),)
+        else:
+            send_command((Command.TURN, -1),)
+        run_image_recognition(image)
+    
+def drive_with_cam(robot_pos, target):
+    send_command((Command.DRIVE, calculate_distance(robot_pos, target) - ROBOT_LENGTH))
+    # TODO fix drift using cam
+        
+
+def collect_balls(image):
+    offset = 90
+    robot_position = None
+    robot_angle = None
+    position_error = 2
+    angle_error = 2
+    
+    run_image_recognition(image)
+    while len(get_balls()) > 0 or get_vip_ball() is not None:
+        new_robot_position = get_position()
+        new_robot_angle = get_angle()
+        pos_diff = get_difference_in_position(robot_position, new_robot_position)
+        angle_diff = get_difference_in_angle(robot_angle, new_robot_angle)
+        if not pos_diff - position_error > 0 or not angle_diff - angle_error > 0:
+            path = pathing()
+            path = path[0:2]
+            modified_path = [(10 * p[0], -10 * p[1]) for p in path] # Convert from cm to mm
+            target_angle = calculate_turn(modified_path[0], modified_path[1], get_angle() + offset)
+            rotate_with_cam(target_angle, image)
+            drive_with_cam(new_robot_position, modified_path[1])
+            time.sleep(0.1) # Maybe needed
+        run_image_recognition(image)
+            
+        
+
 
 def no_robot(camera_index=0):
   # Initialize the camera
@@ -96,7 +128,7 @@ def no_robot(camera_index=0):
 
 if __name__ == "__main__":
     # Uncomment the line below to run with the robot and a specific camera index
-    # with_robot(camera_index=0)
+    with_robot(camera_index=1)
 
     # Uncomment the line below to run without the robot and a specific camera index
-    no_robot(camera_index=0)
+    #no_robot(camera_index=0)
