@@ -1,0 +1,70 @@
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon as MplPolygon, Circle
+
+def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_order, has_vip, width, height, ball_diameter=4, original_obstacles=None, debug=False):
+    if debug:
+        fig, ax = plt.subplots()
+    else:
+        plt.ion() # Interactive mode
+        plt.clf()
+        fig, ax = plt.gcf(), plt.gca()
+
+    fig.set_size_inches(8, 6, True)
+    radius = ball_diameter / 2
+
+    if original_obstacles is None:
+        original_obstacles = obstacles
+
+    # Plot inflated obstacles with original ones inside
+    for inflated_obs, original_obs in zip(obstacles, original_obstacles):
+    # Inflated obstacle (outer)
+        inflated_patch = MplPolygon(list(inflated_obs.exterior.coords), closed=True, facecolor='lightgray', edgecolor='gray', alpha=0.6)
+        ax.add_patch(inflated_patch)
+    # Original obstacle (inner)
+        original_patch = MplPolygon(list(original_obs.exterior.coords), closed=True, facecolor='dimgray', edgecolor='black', alpha=1.0)
+        ax.add_patch(original_patch)
+
+    ax.add_patch(Circle(start, radius, color='green', label='Start'))
+    if vip:
+        ax.add_patch(Circle(vip, radius, color='magenta', label='VIP'))
+
+    for i, pt in enumerate(safe_points):
+        ax.add_patch(Circle(pt, radius, color='orange', label='Safe Point' if i == 0 else None))
+        #ax.text(pt[0]+radius, pt[1]+radius, f'S{i}', color='orange')
+
+    for i, pt in enumerate(others):
+        ax.add_patch(Circle(pt, radius, color='blue', label='Other Balls' if i == 0 else None))
+        #ax.text(pt[0]+radius, pt[1]+radius, f'O{i}', color='blue')
+
+    ax.add_patch(Circle(end, radius, color='red', label='End'))
+
+    # Path
+    if full_path:
+        xs, ys, types = zip(*full_path)
+        ax.plot(xs, ys, 'r-', linewidth=2, label='Planned path')
+        # Print point type
+        for i, (x, y, t) in enumerate(full_path):
+            ax.text(x + radius, y + radius, f'{t.capitalize()}', color='black', fontsize=8)
+
+    # Title
+    order_text = "Visit order: Start"
+    offset = 2 if has_vip else 1
+    for idx in best_order:
+        if has_vip and idx == 1:
+            order_text += " → VIP"
+        else:
+            order_text += f" → O{idx - offset}"
+    order_text += " → End"
+
+    ax.set_title(order_text)
+    ax.legend()
+    ax.set_aspect('equal')
+    ax.set_xlim(0, width)
+    ax.set_ylim(0, height)
+    ax.grid(True)
+
+    if debug:
+        plt.show()
+    else:
+        fig.canvas.draw()
+        fig.canvas.flush_events()
