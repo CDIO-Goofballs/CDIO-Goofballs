@@ -4,6 +4,9 @@ import numpy as np
 from shapely import Point
 from shapely.geometry import Polygon
 
+from Pathfinding.Point import MyPoint
+
+
 def convert_cross_to_polygons(cross_points, arm_width=3):
     """
     Convert a cross defined by 4 points (top, bottom, right, left)
@@ -145,9 +148,9 @@ def generate_edge_points(corners, long_n=5, short_n=3):
         for j in range(n):
             t = j / (n - 1) if n > 1 else 0.5
             pt = a + t * (b - a)
-            points.append(tuple(pt))
+            points.append(MyPoint(pt[0], pt[1]))
     return points
 
-def generate_safe_points(course_corners, margin=30, long_points=5, short_points=3):
+def generate_safe_points(course_corners, margin=30, long_points=6, short_points=4):
     inset_corners = compute_inset_rectangle(course_corners, margin)
     return generate_edge_points(inset_corners, long_n=long_points, short_n=short_points)

@@ -1,7 +1,7 @@
 import unittest
 import random
-from Pathing import path_finding
-from Polygons import convert_cross_to_polygons, create_egg
+from Pathfinding.Pathing import path_finding
+from Pathfinding.Polygons import convert_cross_to_polygons, create_egg
 from shapely.geometry import Point, Polygon
 
 def generate_random_cross(center_x, center_y, size=20):
@@ -21,15 +21,15 @@ class TestPathFinding(unittest.TestCase):
             margin = 20
             offset_height = height - margin
             offset_width = width - margin
-            cx = random.uniform(margin * 3.5, width - margin * 3.5)
-            cy = random.uniform(margin * 2.5, height - margin * 2.5)
+            cx = random.uniform(width/2 - 10, width/2 + 10)
+            cy = random.uniform(height/2 - 10, height/2 + 10)
             cross = generate_random_cross(cx, cy, size=20)
             robot_radius = 10.5
 
             start = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
             end = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
             num_objects = random.randint(7, 10)
-            objects = [(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) for _ in range(num_objects)]
+            objects = [(random.uniform(5, width - 5), random.uniform(5, height-5)) for _ in range(num_objects)]
             vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
             egg = None
 

@@ -24,27 +24,31 @@ def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_
         original_patch = MplPolygon(list(original_obs.exterior.coords), closed=True, facecolor='dimgray', edgecolor='black', alpha=1.0)
         ax.add_patch(original_patch)
 
-    ax.add_patch(Circle(start, radius, color='green', label='Start'))
+    ax.add_patch(Circle((start.x, start.y), radius, color='green', label='Start'))
     if vip:
-        ax.add_patch(Circle(vip, radius, color='magenta', label='VIP'))
+        ax.add_patch(Circle((vip.x, vip.y), radius, color='magenta', label='VIP'))
 
     for i, pt in enumerate(safe_points):
-        ax.add_patch(Circle(pt, radius, color='orange', label='Safe Point' if i == 0 else None))
+        ax.add_patch(Circle((pt.x, pt.y), radius, color='orange', label='Safe Point' if i == 0 else None))
         #ax.text(pt[0]+radius, pt[1]+radius, f'S{i}', color='orange')
 
     for i, pt in enumerate(others):
-        ax.add_patch(Circle(pt, radius, color='blue', label='Other Balls' if i == 0 else None))
+        ax.add_patch(Circle((pt.x, pt.y), radius, color='blue', label='Other Balls' if i == 0 else None))
         #ax.text(pt[0]+radius, pt[1]+radius, f'O{i}', color='blue')
 
-    ax.add_patch(Circle(end, radius, color='red', label='End'))
+    ax.add_patch(Circle((end.x, end.y), radius, color='red', label='End'))
 
     # Path
     if full_path:
-        xs, ys, types = zip(*full_path)
+        xs = [pt.x for pt in full_path]
+        ys = [pt.y for pt in full_path]
         ax.plot(xs, ys, 'r-', linewidth=2, label='Planned path')
         # Print point type
-        for i, (x, y, t) in enumerate(full_path):
-            ax.text(x + radius, y + radius, f'{t.capitalize()}', color='black', fontsize=8)
+        for i, pt in enumerate(full_path):
+            ax.text(pt.x + radius, pt.y + radius, f'{pt.type.capitalize()}', color='black', fontsize=8)
+            if pt.type == 'safe':
+                # Draw a line between point and the point.target
+                ax.plot([pt.x, pt.target.x], [pt.y, pt.target.y], 'g--', linewidth=2, color='green')
 
     # Title
     order_text = "Visit order: Start"
@@ -68,3 +72,5 @@ def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_
     else:
         fig.canvas.draw()
         fig.canvas.flush_events()
+
+
