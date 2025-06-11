@@ -37,6 +37,8 @@ def object_recognition(img, scale_factor):
     small_goal = None
     big_goal = None
 
+    vip_confidence = 0
+
     results = model.infer(img)[0]
     predictions = results.predictions
 
@@ -45,7 +47,10 @@ def object_recognition(img, scale_factor):
             case "Ball":
                 balls.append((prediction.x * scale_factor, prediction.y * scale_factor))
             case "Vip":
-                vip_ball = (prediction.x * scale_factor, prediction.y * scale_factor)
+                if vip_confidence < prediction.confidence:
+                    vip_ball = (prediction.x * scale_factor, prediction.y * scale_factor)
+                    vip_confidence = prediction.confidence
+                print("VIPpred:", prediction)
             case "Wall":
                 for point in prediction.points:
                     wall_points.append( (scale_factor * point.x, scale_factor * point.y) )
