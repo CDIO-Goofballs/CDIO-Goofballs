@@ -378,7 +378,6 @@ def plot_route(start, vip, others, end, obstacles, full_path, best_order, has_vi
     ax.set_ylim(0, height)
     ax.grid(True)
 
-    # Draw the figure non-blocking
     fig.canvas.draw()
     fig.canvas.flush_events()
 

@@ -1,15 +1,26 @@
 #!/usr/bin/env python3
-from ev3dev2.motor import MediumMotor, LargeMotor, OUTPUT_A, OUTPUT_B, OUTPUT_D, MoveTank, SpeedPercent
+from ev3dev2.motor import MediumMotor, LargeMotor, OUTPUT_A, OUTPUT_B, OUTPUT_D, SpeedPercent, MoveDifferential
 from ev3dev2.sensor import INPUT_3
 from ev3dev2.sensor.lego import GyroSensor
+from ev3dev2.wheel import Wheel
 import socket
 import time
 import threading
 import queue
 
+# Constants
+WHEEL_DIAMETER_MM = 67 # Real life size is 68.8 mm
+WHEEL_WIDTH_MM = 36 # Real life size is 36 mm
+WHEEL_BASE_MM = 290 # Real life size is 170 mm
+
+ROTATION_SPEED = 10
+STRAIGHT_SPEED = 10
+
+SERVER_IP = '192.168.137.1'
+SERVER_PORT = 12345
+
 queue = queue.Queue()
 
-# Initialize the motors.
 motorA = LargeMotor(OUTPUT_B) # Reverse motors because we drive inverted
 motorB = LargeMotor(OUTPUT_A)
 servo = MediumMotor(OUTPUT_D)
@@ -17,76 +28,51 @@ servo = MediumMotor(OUTPUT_D)
 servo_position = 0 # -30 is closed, 0 is slightly open, 80 is open and letting balls out.
 servo.reset()
 
-tank = MoveTank(OUTPUT_A, OUTPUT_B)
-# Initialize the tank's gyro sensor
-tank.gyro = GyroSensor(INPUT_3)
-tank.gyro.mode = "GYRO-ANG"
+class CustomWheel(Wheel):
+    def __init__(self):
+        super().__init__(WHEEL_DIAMETER_MM, WHEEL_WIDTH_MM)
+
+move_diff = MoveDifferential(OUTPUT_A, OUTPUT_B, CustomWheel, WHEEL_BASE_MM)
+move_diff.gyro = GyroSensor(INPUT_3)
+move_diff.gyro.calibrate()
 
 shutdown_event = threading.Event()
 stop_event = threading.Event()
 
-# Calibrate the gyro to eliminate drift, and to initialize the current angle as 0
-tank.gyro.calibrate()
-
-# Constants
-WHEEL_DIAMETER_MM = 68  # Adjust based on your wheel
-DEGREES_PER_ROTATION = 360
-PI = 3.1416
-WHEEL_CIRCUMFERENCE_CM = 6.8 * PI   # Approx. for standard EV3 wheels (5.6cm diameter)
-WHEEL_BASE_CM = 17
-DEGREES_TO_ROTATIONS = lambda angle: (WHEEL_BASE_CM * 3.1416 * angle) / (360 * WHEEL_CIRCUMFERENCE_CM)
-WHEEL_DIAMETER_CM = 6.8  # Standard EV3 wheel diameter
-CM_TO_ROTATIONS = lambda cm: cm / WHEEL_CIRCUMFERENCE_CM
-
-def mm_to_degrees(distance_mm):
-    wheel_circumference = PI * WHEEL_DIAMETER_MM
-    rotations_needed = distance_mm / wheel_circumference
-    return rotations_needed * DEGREES_PER_ROTATION
-
-
-def degrees_to_mm(degrees):
-    """Convert rotation in degrees to linear distance in mm."""
-    circumference = PI * WHEEL_DIAMETER_MM
-    return (degrees / 360) * circumference
-
-
 def stop():
     print("Stopped")
-    tank.stop()
-    tank.off()
+    move_diff.stop()
+    move_diff.off()
     stop_event.set()
     servo.on_to_position(SpeedPercent(20), 0)
     while (not queue.empty()):
         queue.get()
     
-def rotate_robot(angle, speed=15):
-    """
-    Rotates the robot in place by a specified angle (in degrees).
-    Positive angle = right turn; Negative = left turn.
-    """
-    # Calculate how many wheel rotations are needed for the given angle
-    tank.gyro.reset()
-    time.sleep(0.5)
-    # Determine direction
-    if angle > 0:
-        # Turn right
-        tank.on(speed, -speed)
-        while -tank.gyro.angle < angle and not stop_event.is_set():
-            time.sleep(0.001)
-    else:
-        # Turn left
-        tank.on(-speed, speed)
-        while -tank.gyro.angle > angle and not stop_event.is_set():
-            time.sleep(0.001)
-    tank.off()
+def adjust_to_gyro(target_deg, speed=20):
+    print("Target angle: ", target_deg)
+    while move_diff.gyro.angle - target_deg > 1 and not stop_event.is_set():  # allow a tiny error range
+        current_angle = move_diff.gyro.angle
+        print("Current angle: ", current_angle)
+        if current_angle > target_deg:
+            # turn right (clockwise)
+            move_diff.turn_right(SpeedPercent(speed), 2)
+        else:
+            # turn left (counter-clockwise)
+            move_diff.turn_left(SpeedPercent(speed), 2)
+        time.sleep(0.01)
+    
+def rotate(angle, speed=ROTATION_SPEED):
+    print("Trying to turn: ", angle)
+    move_diff.turn_degrees(speed = SpeedPercent(speed), degrees = angle, use_gyro = False)
+    adjust_to_gyro(-angle)
+    move_diff.gyro.reset()
     
 
-def straight(distance, speed = 60):
-    rotations = CM_TO_ROTATIONS(abs(distance/10))
+def straight(distance, speed = STRAIGHT_SPEED):
     if distance > 0:
-        tank.on_for_rotations(speed, speed, rotations)
+        move_diff.on_for_distance(SpeedPercent(speed), -distance)
     else:
-        tank.on_for_rotations(-speed, -speed, rotations)
+        move_diff.on_for_distance(SpeedPercent(-speed), distance)
 
 def execute_command():
     while not shutdown_event.is_set():
@@ -95,8 +81,8 @@ def execute_command():
         command = queue.get()
         cmd = command[0]
         arg = command[1]
-        if(cmd == "drive"): straight(-float(arg)) # Invert directionen since front is back.
-        elif(cmd == "turn"): rotate_robot(float(arg))
+        if(cmd == "drive"): straight(float(arg)) # Invert directionen since front is back.
+        elif(cmd == "turn"): rotate(float(arg))
         elif(cmd == "servo"): move_servo(int(arg))
         time.sleep(0.1)
 

@@ -19,7 +19,7 @@ frame_height = 480  # Default height, can be adjusted
 
 def initialize_camera():
     global cam, frame_width, frame_height
-    cam = cv2.VideoCapture(0)
+    cam = cv2.VideoCapture(1)
 
     # Get the default frame width and height
     frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))

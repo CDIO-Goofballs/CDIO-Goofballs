@@ -2,10 +2,10 @@ import cv2
 import numpy as np
 import math
 
-camera_height = 1.68  # meters
+camera_height = 1.70  # meters
 scale_aruco_size = 0.15  # meters
 robot_aruco_size = 0.08  # meters
-robot_aruco_height = 0.3
+robot_aruco_height = 0.35
 
 def find_aruco(image, scale_factor, width, height):
     # Convert the image to grayscale
