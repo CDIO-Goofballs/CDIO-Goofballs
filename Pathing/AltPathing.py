@@ -149,7 +149,7 @@ def reconstruct_full_path(paths, best_order):
         if i == 0:
             label = 'start'
         elif i == len(subpath) - 1:
-            label = 'vip' if best_order[0] == 1 else 'ball'
+            label = 'ball'
         else:
             label = 'turn_point'
         full_path.append((*point, label))
