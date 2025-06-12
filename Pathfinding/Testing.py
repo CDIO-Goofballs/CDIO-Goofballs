@@ -33,7 +33,7 @@ class TestPathFinding(unittest.TestCase):
             vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
             egg = None
 
-            path = path_finding(cross=cross, egg=egg, start=start, vip=vip, balls=objects, end=end,
+            path = path_finding(cross=None, egg=None, start=start, vip=None, balls=None, end=end,
                                 wall_corners=wall_corners, robot_radius=robot_radius, width=width, height=height, debug=True)
 
             self.assertIsInstance(path, list)

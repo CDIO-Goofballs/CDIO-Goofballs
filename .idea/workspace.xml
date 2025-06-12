@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="026790e8-3758-480a-9b1c-0c18e1e83a8a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/ImageRecognition/RoboFlow/CoordinateMapping.py" beforeDir="false" afterPath="$PROJECT_DIR$/ImageRecognition/RoboFlow/CoordinateMapping.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Pathfinding/Pathing.py" beforeDir="false" afterPath="$PROJECT_DIR$/Pathfinding/Pathing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Pathfinding/Plotting.py" beforeDir="false" afterPath="$PROJECT_DIR$/Pathfinding/Plotting.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Pathfinding/Testing.py" beforeDir="false" afterPath="$PROJECT_DIR$/Pathfinding/Testing.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,28 +37,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.ColorRecognition.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.MainImageRecognition.executor&quot;: &quot;Run&quot;,
-    &quot;Python.RoboFlow.executor&quot;: &quot;Run&quot;,
-    &quot;Python.RoboFlowVideo.executor&quot;: &quot;Run&quot;,
-    &quot;Python.RoboFlowWorkflow.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Jonat/PycharmProjects/CDIO-Goofballs/main.py&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python tests.Python tests for Testing.TestPathFinding.executor": "Run",
+    "Python.ColorRecognition.executor": "Run",
+    "Python.Main.executor": "Run",
+    "Python.MainImageRecognition.executor": "Run",
+    "Python.RoboFlow.executor": "Run",
+    "Python.RoboFlowVideo.executor": "Run",
+    "Python.RoboFlowWorkflow.executor": "Run",
+    "Python.main.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "dev",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/Jonat/PycharmProjects/CDIO-Goofballs/main.py",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Jonat\PycharmProjects\RoboFlow" />
@@ -65,7 +69,7 @@
       <recent name="C:\Users\Jonat\PycharmProjects\RoboFlow" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python tests.Python tests for Testing.TestPathFinding">
     <configuration name="Main" type="PythonConfigurationType" factoryName="Python">
       <module name="CDIO-Goofballs" />
       <option name="ENV_FILES" value="" />
@@ -90,6 +94,30 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="Python tests for Testing.TestPathFinding" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="CDIO-Goofballs" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Pathfinding" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;Testing.TestPathFinding&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.Main" />
+      <item itemvalue="Python tests.Python tests for Testing.TestPathFinding" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python tests.Python tests for Testing.TestPathFinding" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>

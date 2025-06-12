@@ -32,9 +32,10 @@ def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_
         ax.add_patch(Circle((pt.x, pt.y), radius, color='orange', label='Safe Point' if i == 0 else None))
         #ax.text(pt[0]+radius, pt[1]+radius, f'S{i}', color='orange')
 
-    for i, pt in enumerate(others):
-        ax.add_patch(Circle((pt.x, pt.y), radius, color='blue', label='Other Balls' if i == 0 else None))
-        #ax.text(pt[0]+radius, pt[1]+radius, f'O{i}', color='blue')
+    if others:
+        for i, pt in enumerate(others):
+            ax.add_patch(Circle((pt.x, pt.y), radius, color='blue', label='Other Balls' if i == 0 else None))
+            #ax.text(pt[0]+radius, pt[1]+radius, f'O{i}', color='blue')
 
     ax.add_patch(Circle((end.x, end.y), radius, color='red', label='End'))
 

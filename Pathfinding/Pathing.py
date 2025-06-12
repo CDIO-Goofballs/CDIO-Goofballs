@@ -95,6 +95,12 @@ def solve_tsp_approx(dist, start_idx=0, end_idx=None, must_visit_first=None):
     n = len(dist)
     G = nx.complete_graph(n)
 
+    if end_idx is None:
+        return [], float('inf')
+
+    if n == 2:
+        return [1], dist[0][1]
+
     for i in range(n):
         for j in range(i + 1, n):
             G[i][j]['weight'] = dist[i][j]
@@ -138,6 +144,10 @@ def reconstruct_full_path(paths, best_order, points):
     n = len(paths)
     full_path = []
 
+    if n == 2:
+        full_path.extend(points)
+        return full_path
+
     # From start to first visited point
     start_idx = 0
     first_target_idx = best_order[0]
@@ -170,6 +180,7 @@ def reconstruct_full_path(paths, best_order, points):
     end_idx = n - 1
     subpath = paths[last_idx][end_idx]
 
+
     for i, (x, y) in enumerate(subpath[1:]):  # Skip first to avoid duplicate
         pt = points[end_idx] if i == len(subpath[1:]) - 1 else MyPoint(x, y, type='turn')
         full_path.append(MyPoint(x, y, type=pt.type, target=getattr(pt, 'target', None)))
@@ -187,7 +198,9 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         points.append(vip)
         vip_idx = 1
 
-    points += others
+    if others:
+        points += others
+
     points.append(end)
 
     G, all_nodes = build_visibility_graph(points, inflated_obstacles)
@@ -202,16 +215,17 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
 
     filtered_others = []
     ball_start_idx = 2 if vip is not None else 1
-    for i, pt in enumerate(others):
-        idx = i + ball_start_idx
-        if idx in reachable:
-            filtered_others.append(pt)
-        else:
-            replacement = find_nearest_free_point(safe_points, pt, original_obstacles)
-            if replacement:
-                filtered_others.append(replacement)
+    if others:
+        for i, pt in enumerate(others):
+            idx = i + ball_start_idx
+            if idx in reachable:
+                filtered_others.append(pt)
             else:
-                print("Replacement not found")
+                replacement = find_nearest_free_point(safe_points, pt, original_obstacles)
+                if replacement:
+                    filtered_others.append(replacement)
+                else:
+                    print("Replacement not found")
 
     filtered_end = end if (len(points) - 1) in reachable else None
     if filtered_end is None:
@@ -245,8 +259,6 @@ def path_finding(
     """
     Main interface to compute full route.
     """
-    if not balls:
-        return []
 
     cross_obstacles = convert_cross_to_polygons(cross, 3) if cross else []
     boundary_walls = create_boundary_walls_from_corners(wall_corners, thickness=1.5) if wall_corners else []
@@ -260,7 +272,7 @@ def path_finding(
     start = MyPoint(start[0], start[1], type='start')
 
     vip = MyPoint(*vip, type='vip') if vip else None
-    balls = [MyPoint(*ball, type='ball') for ball in balls]
+    balls = [MyPoint(*ball, type='ball') for ball in balls] if balls else None
     end = MyPoint(*end, type='end')
 
     inflated_obstacles = [obs.buffer(robot_radius).simplify(1.5) for obs in obstacles]
