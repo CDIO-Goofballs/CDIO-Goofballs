@@ -37,7 +37,7 @@ def object_recognition(img, scale_factor):
     small_goal = None
     big_goal = None
 
-    vip_confidence = 0
+    vips = []
 
     results = model.infer(img)[0]
     predictions = results.predictions
@@ -47,9 +47,7 @@ def object_recognition(img, scale_factor):
             case "Ball":
                 balls.append((prediction.x * scale_factor, prediction.y * scale_factor))
             case "Vip":
-                if vip_confidence < prediction.confidence:
-                    vip_ball = (prediction.x * scale_factor, prediction.y * scale_factor)
-                    vip_confidence = prediction.confidence
+                vips.append(prediction)
             case "Wall":
                 for point in prediction.points:
                     wall_points.append( (scale_factor * point.x, scale_factor * point.y) )
@@ -67,6 +65,14 @@ def object_recognition(img, scale_factor):
                 small_goal = (prediction.x * scale_factor, prediction.y * scale_factor)
             case "Big-goal":
                 big_goal = (prediction.x * scale_factor, prediction.y * scale_factor)
+
+    # Vip should be the one with the highest confidence, while the rest become normal balls
+    if vips:
+        vips.sort(key=lambda x: x.confidence, reverse=True)
+        vip_ball = (vips[0].x * scale_factor, vips[0].y * scale_factor)
+        vips = vips[1:]
+    for vip in vips:
+        balls.append((vip.x * scale_factor, vip.y * scale_factor))
 
     # load the results into the supervision Detections api
     detections = sv.Detections.from_inference(results)

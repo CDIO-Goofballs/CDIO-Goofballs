@@ -9,7 +9,7 @@ import cv2
 from ImageRecognition.RoboFlow.MainImageRecognition import (
     initialize_camera, run_image_recognition, stop_image_recognition, get_wall_corners, get_vip_ball, get_balls, get_cross, get_egg,
     get_small_goal, get_big_goal, get_angle, get_position, get_scale_factor, get_size)
-from Pathing.Pathing import path_finding
+from Pathfinding.Pathing import path_finding
 import keyboard
 
 ROBOT_LENGTH = 270
