@@ -8,9 +8,10 @@ from Plotting import plot_route
 from Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, generate_safe_points
 from Point import MyPoint
 
-def find_nearest_free_point(safe_points, point, obstacles):
+def find_nearest_safe_point(safe_points, point, obstacles, min_distance = 28):
     """
-    Given a point inside an obstacle, return the nearest visible point outside all obstacles.
+    Given a point inside an obstacle, return the nearest safe point outside
+    all obstacles and at a distance of minimum length corresponding to robot length.
     """
     shortest_distance = float('inf')
     candidate_x = 0
@@ -19,7 +20,7 @@ def find_nearest_free_point(safe_points, point, obstacles):
     for safe_pt in safe_points:
         distance = np.linalg.norm(np.array([point.x, point.y]) - np.array([safe_pt.x, safe_pt.y]))
         if (is_visible((point.x, point.y), (safe_pt.x, safe_pt.y), obstacles) and
-                shortest_distance > distance >= 28):
+                shortest_distance > distance >= min_distance):
             candidate_x = safe_pt.x
             candidate_y = safe_pt.y
             shortest_distance = distance
@@ -223,21 +224,31 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         if i == 0 or nx.has_path(G, source=0, target=i):
             reachable.add(i)
 
-    new_vip = vip if vip_idx in reachable else None
+    if vip:
+        if vip_idx in reachable:
+            new_vip = vip
+        else:
+            replacement = find_nearest_safe_point(safe_points, vip, original_obstacles)
+            if replacement:
+                new_vip = replacement
+            else:
+                new_vip = None
+                print("Replacement vip not found")
+    else:
+        new_vip = None
 
     filtered_others = []
     ball_start_idx = 2 if vip is not None else 1
-    if others:
-        for i, pt in enumerate(others):
-            idx = i + ball_start_idx
-            if idx in reachable:
-                filtered_others.append(pt)
+    for i, pt in enumerate(others):
+        idx = i + ball_start_idx
+        if idx in reachable:
+            filtered_others.append(pt)
+        else:
+            replacement = find_nearest_safe_point(safe_points, pt, original_obstacles)
+            if replacement:
+                filtered_others.append(replacement)
             else:
-                replacement = find_nearest_free_point(safe_points, pt, original_obstacles)
-                if replacement:
-                    filtered_others.append(replacement)
-                else:
-                    print("Replacement not found")
+                print("Replacement not found")
 
     filtered_end = end if (len(points) - 1) in reachable else None
     if filtered_end is None:
@@ -284,7 +295,7 @@ def path_finding(
     start = MyPoint(start[0], start[1], type='start')
 
     vip = MyPoint(*vip, type='vip') if vip else None
-    balls = [MyPoint(*ball, type='ball') for ball in balls] if balls else None
+    balls = [MyPoint(*ball, type='ball') for ball in balls]
     end = MyPoint(*end, type='end')
 
     inflated_obstacles = [obs.buffer(robot_radius).simplify(1.5) for obs in obstacles]
