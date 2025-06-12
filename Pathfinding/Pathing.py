@@ -145,7 +145,19 @@ def reconstruct_full_path(paths, best_order, points):
     full_path = []
 
     if n == 2:
-        full_path.extend(points)
+        start_idx = 0
+        end_idx = 1
+        subpath = paths[start_idx][end_idx]
+
+        for i, (x, y) in enumerate(subpath):
+            if i == 0:
+                pt = points[start_idx]
+            elif i == len(subpath) - 1:
+                pt = points[end_idx]
+            else:
+                pt = MyPoint(x, y, type='turn')
+            full_path.append(MyPoint(x, y, type=pt.type, target=getattr(pt, 'target', None)))
+
         return full_path
 
     # From start to first visited point
