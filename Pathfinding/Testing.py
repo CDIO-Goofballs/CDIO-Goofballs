@@ -28,12 +28,12 @@ class TestPathFinding(unittest.TestCase):
 
             start = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
             end = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
-            num_objects = random.randint(7, 10)
-            objects = [(random.uniform(5, width - 5), random.uniform(5, height-5)) for _ in range(num_objects)]
+            num_objects = random.randint(0, 10)
+            balls = [(random.uniform(5, width - 5), random.uniform(5, height-5)) for _ in range(num_objects)]
             vip = (random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None
             egg = None
 
-            path = path_finding(cross=None, egg=None, start=start, vip=None, balls=None, end=end,
+            path = path_finding(cross=cross, egg=egg, start=start, vip=vip, balls=balls, end=end,
                                 wall_corners=wall_corners, robot_radius=robot_radius, width=width, height=height, debug=True)
 
             self.assertIsInstance(path, list)
