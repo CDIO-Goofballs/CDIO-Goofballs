@@ -271,10 +271,14 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
     else:
         best_order, best_length = solve_tsp_approx(dist, start_idx=0, end_idx=len(points_indices) - 1)
 
-    if best_order:
-        full_path = reconstruct_full_path(paths, best_order, new_points)
-        return best_order, best_length, full_path, new_vip is not None
-    else:
+    try:
+        if best_order:
+            full_path = reconstruct_full_path(paths, best_order, new_points)
+            return best_order, best_length, full_path, new_vip is not None
+        else:
+            return [], 0, [], new_vip is not None
+    except Exception as e:
+        print(e)
         return [], 0, [], new_vip is not None
 
 def path_finding(
