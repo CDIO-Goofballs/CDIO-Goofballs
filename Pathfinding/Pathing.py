@@ -25,6 +25,9 @@ def find_nearest_safe_point(safe_points, point, obstacles, min_distance = 28):
             candidate_y = safe_pt.y
             shortest_distance = distance
 
+    if shortest_distance == float('inf'):
+        return None
+
     return MyPoint(candidate_x, candidate_y, type='safe', target=point)
 
 def is_visible(p1, p2, obstacles, p1_obj=None, p2_obj=None):
