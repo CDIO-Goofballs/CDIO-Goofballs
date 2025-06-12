@@ -4,7 +4,7 @@ import numpy as np
 from shapely import Point
 from shapely.geometry import Polygon
 
-from Point import MyPoint
+from Pathfinding.Point import MyPoint
 
 
 def convert_cross_to_polygons(cross_points, arm_width=3):

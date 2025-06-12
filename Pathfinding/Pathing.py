@@ -4,9 +4,9 @@ from shapely.geometry import LineString, Point
 import networkx as nx
 from networkx.algorithms.approximation import traveling_salesman_problem
 
-from Plotting import plot_route
-from Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, generate_safe_points
-from Point import MyPoint
+from Pathfinding.Plotting import plot_route
+from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, generate_safe_points
+from Pathfinding.Point import MyPoint
 
 def find_nearest_safe_point(safe_points, point, obstacles, min_distance = 28):
     """
@@ -319,7 +319,7 @@ def path_finding(
         start, vip, balls, end, inflated_obstacles, obstacles, safe_points
     )
 
-    plot_route(start, vip, balls, end, inflated_obstacles, safe_points, full_path,
-               best_order, has_vip, width=width, height=height, original_obstacles=obstacles, debug=debug)
+    #plot_route(start, vip, balls, end, inflated_obstacles, safe_points, full_path,
+    #           best_order, has_vip, width=width, height=height, original_obstacles=obstacles, debug=debug)
 
     return full_path
