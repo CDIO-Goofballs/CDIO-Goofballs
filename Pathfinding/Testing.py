@@ -1,7 +1,7 @@
 import unittest
 import random
-from Pathfinding.Pathing import path_finding
-from Pathfinding.Polygons import convert_cross_to_polygons, create_egg
+from Pathing import path_finding
+from Polygons import convert_cross_to_polygons, create_egg
 from shapely.geometry import Point, Polygon
 
 def generate_random_cross(center_x, center_y, size=20):
