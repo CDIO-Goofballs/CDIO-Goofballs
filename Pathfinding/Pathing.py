@@ -4,9 +4,9 @@ from shapely.geometry import LineString, Point
 import networkx as nx
 from networkx.algorithms.approximation import traveling_salesman_problem
 
-from Pathfinding.Plotting import plot_route
-from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, generate_safe_points
-from Pathfinding.Point import MyPoint
+from Plotting import plot_route
+from Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, generate_safe_points
+from Point import MyPoint
 
 def find_nearest_free_point(safe_points, point, obstacles):
     """
