@@ -38,6 +38,7 @@ def object_recognition(img, scale_factor):
     big_goal = None
 
     vips = []
+    cross_objects = []
 
     results = model.infer(img)[0]
     predictions = results.predictions
@@ -52,13 +53,7 @@ def object_recognition(img, scale_factor):
                 for point in prediction.points:
                     wall_points.append( (scale_factor * point.x, scale_factor * point.y) )
             case "Cross":
-                y_sort = sorted(prediction.points, key=point_y)
-                top = (y_sort[0].x * scale_factor, y_sort[0].y * scale_factor)
-                bottom = (y_sort[-1].x * scale_factor, y_sort[-1].y * scale_factor)
-                x_sort = sorted(prediction.points, key=point_x)
-                left = (x_sort[0].x * scale_factor, x_sort[0].y * scale_factor)
-                right = (x_sort[-1].x * scale_factor, x_sort[-1].y * scale_factor)
-                cross = (top, bottom, right, left)
+                cross_objects.append(prediction)
             case "Eggman":
                 egg = (prediction.x * scale_factor, prediction.y * scale_factor)
             case "Small-goal":
@@ -73,6 +68,19 @@ def object_recognition(img, scale_factor):
         vips = vips[1:]
     for vip in vips:
         balls.append((vip.x * scale_factor, vip.y * scale_factor))
+
+    # Cross should be the one with the highest confidence, while the rest are ignored
+    if cross_objects:
+        cross_objects.sort(key=lambda x: x.confidence, reverse=True)
+        selected_cross = cross_objects[0]
+        y_sort = sorted(selected_cross.points, key=point_y)
+        top = (y_sort[0].x * scale_factor, y_sort[0].y * scale_factor)
+        bottom = (y_sort[-1].x * scale_factor, y_sort[-1].y * scale_factor)
+        x_sort = sorted(selected_cross.points, key=point_x)
+        left = (x_sort[0].x * scale_factor, x_sort[0].y * scale_factor)
+        right = (x_sort[-1].x * scale_factor, x_sort[-1].y * scale_factor)
+        cross = (top, bottom, right, left)
+
 
     # load the results into the supervision Detections api
     detections = sv.Detections.from_inference(results)
