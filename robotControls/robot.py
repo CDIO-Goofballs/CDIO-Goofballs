@@ -11,10 +11,10 @@ import queue
 # Constants
 WHEEL_DIAMETER_MM = 67 # Real life size is 68.8 mm
 WHEEL_WIDTH_MM = 36 # Real life size is 36 mm
-WHEEL_BASE_MM = 200 # Real life size is 170 mm
+WHEEL_BASE_MM = 400 # Real life size is 170 mm
 
-ROTATION_SPEED = 10
-STRAIGHT_SPEED = 10
+ROTATION_SPEED = 40
+STRAIGHT_SPEED = 50
 
 SERVER_IP = '192.168.137.1'
 SERVER_PORT = 12345
@@ -44,7 +44,7 @@ def stop():
     move_diff.stop()
     move_diff.off()
     stop_event.set()
-    servo.on_to_position(SpeedPercent(20), 0)
+    #servo.on_to_position(SpeedPercent(20), 0)
     while (not queue.empty()):
         queue.get()
     
@@ -80,7 +80,7 @@ def execute_command(conn):
         cmd = command[0]
         arg = command[1]
         if(cmd == "drive"): straight(float(arg)) # Invert directionen since front is back.
-        elif(cmd == "turn"): rotate(float(arg))
+        elif(cmd == "turn"): rotate(-float(arg))
         elif(cmd == "servo"): move_servo(int(arg))
         print("Done!")
         time.sleep(0.1)

@@ -54,13 +54,17 @@ def get_angle():
     Returns the latest angle detected by the QR code.
     :return: 0 if the robot QR code isn't detected, otherwise the angle in degrees.
     """
-    return -((latest_angle + 90) % 360 - 180)
+    return (latest_angle + 90) % 360 - 180
 def get_position():
     """
     Returns the latest position detected by the QR code.
     :return: None if the robot QR code isn't detected, otherwise a tuple (x, y) representing the position.
     """
     return latest_position
+def get_position_mm():
+    if not latest_position:
+        return (0,0)
+    return (latest_position[0] * 10, latest_position[1] * 10)
 def get_scale_factor():
     """
     Returns the scale factor used for scaling the coordinates of detected objects.
