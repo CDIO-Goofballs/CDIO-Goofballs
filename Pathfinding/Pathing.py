@@ -319,7 +319,7 @@ def path_finding(
         start, vip, balls, end, inflated_obstacles, obstacles, safe_points
     )
 
-    #plot_route(start, vip, balls, end, inflated_obstacles, safe_points, full_path,
-    #           best_order, has_vip, width=width, height=height, original_obstacles=obstacles, debug=debug)
+    plot_route(start, vip, balls, end, inflated_obstacles, safe_points, full_path,
+               best_order, has_vip, width=width, height=height, original_obstacles=obstacles, debug=debug)
 
     return full_path
