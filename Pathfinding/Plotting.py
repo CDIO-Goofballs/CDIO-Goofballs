@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MplPolygon, Circle
+import numpy as np
 
-def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_order, has_vip, width, height, ball_diameter=4, original_obstacles=None, debug=False):
+def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_order, has_vip, 
+               width, height, ball_diameter=4, original_obstacles=None, debug=False, start_angle=0):
     if debug:
         fig, ax = plt.subplots()
     else:
@@ -25,6 +27,9 @@ def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_
         ax.add_patch(original_patch)
 
     ax.add_patch(Circle((start.x, start.y), radius, color='green', label='Start'))
+    # Draw angle for start as arrow with length of 10
+    ax.arrow(start.x, start.y, 10 * np.cos(np.radians(start_angle)), 10 * np.sin(np.radians(start_angle)),
+             head_width=1, head_length=2, fc='green', ec='green', label='Start Angle' if start_angle != 0 else None)
     if vip:
         ax.add_patch(Circle((vip.x, vip.y), radius, color='magenta', label='VIP'))
 

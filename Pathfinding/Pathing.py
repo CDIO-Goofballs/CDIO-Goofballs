@@ -285,7 +285,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         return [], 0, [], new_vip is not None
 
 def path_finding(
-        cross, egg, start, vip, balls, end, wall_corners, robot_radius=10.5, width=160, height=120, debug=False):
+        cross, egg, start, vip, balls, end, wall_corners, robot_radius=10.5, width=160, height=120, debug=False, start_angle=0):
     """
     Main interface to compute full route.
     """
