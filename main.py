@@ -6,11 +6,11 @@ from Pathfinding.pathing_main import pathing
 import keyboard
     
 def with_robot(image=None, camera_index=0):
-    print("--------------Start--------------")
     if not image:
         initialize_camera(camera_index)
         
     connect()
+    print("--------------Start--------------")
     keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
     run_image_recognition(image)
     run_image_recognition(image)

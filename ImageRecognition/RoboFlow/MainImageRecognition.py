@@ -3,6 +3,7 @@ import time
 import cv2
 from ImageRecognition.RoboFlow.RoboFlow import object_recognition, big_goal
 from ImageRecognition.RoboFlow.CoordinateMapping import find_aruco
+from Pathfinding.Point import MyPoint
 
 scale_factor = 1
 latest_position = None
@@ -62,8 +63,8 @@ def get_position():
     return latest_position
 def get_position_mm():
     if not latest_position:
-        return (0,0)
-    return (latest_position[0] * 10, latest_position[1] * 10)
+        return MyPoint(0,0)
+    return MyPoint(latest_position[0] * 10, latest_position[1] * 10)
 def get_scale_factor():
     """
     Returns the scale factor used for scaling the coordinates of detected objects.

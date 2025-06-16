@@ -29,13 +29,11 @@ def wait_for_done():
         print("Serversocket is None") 
         return
     msg = ""
-    print("Waiting for done signal...")
     while(msg != "Done"):
         data = conn.recv(1024)
         if not data:
             continue
         msg = data.decode()
-    print("Got done!")
     
 def reconnect():
     global conn
@@ -69,19 +67,6 @@ def send_command(command: tuple[Command, Any]):
     except (BrokenPipeError, ConnectionResetError, OSError):
         print("Connection lost. Reconnecting...")
         reconnect()
-
-def points_to_commands(robot_start_angle, positions):
-    print("Robot start angle: ", robot_start_angle)
-    commands = []
-    current_angle = robot_start_angle
-
-    for i in range(len(positions) - 1):
-        turn_angle = calculate_turn(positions[i], positions[i + 1], current_angle)
-        commands.append((Command.TURN, turn_angle))
-        current_angle += turn_angle
-        distance = calculate_distance(positions[i], positions[i + 1])
-        commands.append((Command.DRIVE, distance))
-    return commands
 
 def send_commands(commands):
     for command in commands:
