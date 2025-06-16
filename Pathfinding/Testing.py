@@ -10,7 +10,7 @@ def generate_random_cross(center_x, center_y, size=20):
     bottom = (center_x, center_y - half)
     right = (center_x + half, center_y)
     left = (center_x - half, center_y)
-    return (top, bottom, right, left)
+    return top, bottom, right, left
 
 class TestPathFinding(unittest.TestCase):
     def test_random_path_finding_multiple_runs(self):

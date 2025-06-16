@@ -46,7 +46,7 @@ def stop():
     move_diff.off()
     stop_event.set()
     #servo.on_to_position(SpeedPercent(20), 0)
-    while (not queue.empty()):
+    while not queue.empty():
         queue.get()
     
 def rotate(angle, speed=ROTATION_SPEED):
@@ -61,14 +61,14 @@ def straight(distance, speed = STRAIGHT_SPEED):
 
 def execute_command(conn):
     while not shutdown_event.is_set():
-        if(stop_event.is_set()): 
+        if stop_event.is_set():
             continue
         command = queue.get()
         cmd = command[0]
         arg = command[1]
-        if(cmd == "drive"): straight(arg[0], speed=arg[1])
-        elif(cmd == "turn"): rotate(-arg)
-        elif(cmd == "servo"): move_servo(arg)
+        if cmd == "drive": straight(arg[0], speed=arg[1])
+        elif cmd == "turn": rotate(-arg)
+        elif cmd == "servo": move_servo(arg)
         time.sleep(0.1)
         conn.send("Done".encode())
 
@@ -94,7 +94,7 @@ def check_for_commands(conn):
             for cmd in commands:
                 cmds = cmd.split(',', 1) # Split only on the first comma
                 cmd_name = cmds[0].strip()
-                if(cmd_name == "stop"): 
+                if cmd_name == "stop":
                     stop()
                     continue
                 else:

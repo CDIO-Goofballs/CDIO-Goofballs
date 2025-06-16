@@ -25,11 +25,11 @@ def connect():
 
 def wait_for_done():
     global conn
-    if(server_socket is None):
+    if server_socket is None:
         print("Serversocket is None") 
         return
     msg = ""
-    while(msg != "Done"):
+    while msg != "Done":
         data = conn.recv(1024)
         if not data:
             continue
@@ -46,7 +46,7 @@ def reconnect():
             break
         except Exception as e:
             print(f"Connection attempt failed: {e}")
-            if(counter > 20):
+            if counter > 20:
                 break
             counter += 1
             time.sleep(1)  # Wait before retrying"""
