@@ -43,10 +43,10 @@ def drive_with_cam(target, drive_back=False):
     original_distance = distance
 
     print("Distance to target:", distance, "mm")
-    slow_zone = 80 if targeting_ball else 120
+    slow_zone = 80 if targeting_ball else 200
 
     while distance > slow_zone:
-        send_command((Command.DRIVE, (distance * 3 / 4, 50), ))
+        send_command((Command.DRIVE, (distance * 2 / 3, 50), ))
         wait_for_done()
         run_image_recognition()
         position = get_position_mm()
