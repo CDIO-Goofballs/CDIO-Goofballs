@@ -137,7 +137,7 @@ def compute_inset_rectangle(corners, margin):
 
     return inset_corners
 
-def generate_edge_points(corners, long_n=5, short_n=3):
+def generate_edge_points(corners, long_n=10, short_n=6):
     points = []
     edges = [(corners[i], corners[(i+1)%4]) for i in range(4)]
     lengths = [np.linalg.norm(b - a) for a, b in edges]
@@ -151,6 +151,6 @@ def generate_edge_points(corners, long_n=5, short_n=3):
             points.append(MyPoint(pt[0], pt[1]))
     return points
 
-def generate_safe_points(course_corners, margin=30, long_points=6, short_points=4):
+def generate_safe_points(course_corners, margin=35, long_points=10, short_points=6):
     inset_corners = compute_inset_rectangle(course_corners, margin)
     return generate_edge_points(inset_corners, long_n=long_points, short_n=short_points)
