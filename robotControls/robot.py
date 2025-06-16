@@ -7,6 +7,7 @@ import socket
 import time
 import threading
 import queue
+import ast
 
 # Constants
 WHEEL_DIAMETER_MM = 67 # Real life size is 68.8 mm
@@ -65,9 +66,9 @@ def execute_command(conn):
         command = queue.get()
         cmd = command[0]
         arg = command[1]
-        if(cmd == "drive"): straight(float(arg)) # Invert directionen since front is back.
-        elif(cmd == "turn"): rotate(-float(arg))
-        elif(cmd == "servo"): move_servo(int(arg))
+        if(cmd == "drive"): straight(arg[0], speed=arg[1])
+        elif(cmd == "turn"): rotate(-arg)
+        elif(cmd == "servo"): move_servo(arg)
         time.sleep(0.1)
         conn.send("Done".encode())
 
@@ -91,15 +92,15 @@ def check_for_commands(conn):
             commands = data.decode().strip().rstrip(';').split(';') # Remove trailing semicolon to prevent empty string at the end
             
             for cmd in commands:
-                cmds = cmd.split(',')
+                cmds = cmd.split(',', 1) # Split only on the first comma
                 cmd_name = cmds[0].strip()
                 if(cmd_name == "stop"): 
                     stop()
                     continue
                 else:
                     stop_event.clear()
-                if(len(commands) > 0):
-                    arg = cmds[1].strip()
+                if len(cmds) > 1:
+                    arg = ast.literal_eval(cmds[1].strip())
                     queue.put((cmd_name, arg))
                 else: queue.put((cmd_name, None))
                 time.sleep(0.1)
