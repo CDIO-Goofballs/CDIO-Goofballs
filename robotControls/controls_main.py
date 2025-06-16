@@ -1,4 +1,5 @@
 from ImageRecognition.RoboFlow.MainImageRecognition import run_image_recognition, get_vip_ball, get_balls, get_angle, get_position_mm
+from Pathfinding.Point import MyPoint
 from robotControls.controlCenter import send_command, Command, calculate_distance, calculate_turn, wait_for_done
 from Pathfinding.pathing_main import pathing
 import time
@@ -29,9 +30,13 @@ def rotate_with_cam(target):
         run_image_recognition()
         target_angle = calculate_turn(get_position_mm(), target, 0)
     
-def drive_with_cam(target):
+def drive_with_cam(target, drive_back=False):
     position = get_position_mm()
-    distance = calculate_distance(position, target) - ROBOT_LENGTH
+    targeting_ball = target.type == 'ball' or target.type == 'vip'
+
+    offset = ROBOT_LENGTH if targeting_ball else 0
+    distance = calculate_distance(position, target) - offset
+    original_distance = distance
 
     while distance > 80:
         send_command((Command.DRIVE, distance * 3 / 4),)
@@ -42,35 +47,37 @@ def drive_with_cam(target):
         if abs(get_angle() - target_angle) > 2:
             rotate_with_cam(target)
             position = get_position_mm()
-        distance = calculate_distance(position, target) - ROBOT_LENGTH
+        distance = calculate_distance(position, target) - offset
 
-    send_command((Command.SERVO, 30),)
+    if targeting_ball:
+        send_command((Command.SERVO, 30),)
     send_command((Command.DRIVE, distance), )
-    time.sleep(4)
-    send_command((Command.SERVO, 0),)
+    wait_for_done()
+    if targeting_ball:
+        time.sleep(4)
+        send_command((Command.SERVO, 0),)
+    if drive_back:
+        send_command((Command.DRIVE, -original_distance), )
+        wait_for_done()
+
+def collect_ball(target, drive_back=False):
+    rotate_with_cam(target=target)
+    time.sleep(0.5)
+    run_image_recognition()
+    drive_with_cam(target, drive_back=drive_back)
+    time.sleep(0.5)  # Maybe needed
+    run_image_recognition()
+    if target.type == 'safe':
+        collect_ball(target.target, drive_back=True)
 
 def collect_balls(image):
-    robot_position = None
-    robot_angle = None
-    position_error = 2
-    angle_error = 2
-    
     run_image_recognition(image)
     while len(get_balls()) > 0 or get_vip_ball() is not None:
-        new_robot_position = get_position_mm()
-        new_robot_angle = get_angle()
-        pos_diff = get_difference_in_position(robot_position, new_robot_position)
-        angle_diff = get_difference_in_angle(robot_angle, new_robot_angle)
-        if not pos_diff - position_error > 0 or not angle_diff - angle_error > 0:
-            path = pathing()
-            if not path:
-                continue
-            path = path[0:2]
-            print(path)
-            modified_path = [(10 * p.x, 10 * p.y) for p in path] # Convert from cm to mm
-            rotate_with_cam(target=modified_path[1])
-            time.sleep(0.5)
-            run_image_recognition()
-            drive_with_cam(modified_path[1])
-            time.sleep(0.5) # Maybe needed
+        path = pathing()
+        if not path:
+            continue
+        path = path[0:2]
+        print(path)
+        modified_path = [MyPoint(10 * p.x, 10 * p.y, type=p.type, target=p.target) for p in path] # Convert from cm to mm
+        collect_ball(modified_path[1])
         run_image_recognition(image)
