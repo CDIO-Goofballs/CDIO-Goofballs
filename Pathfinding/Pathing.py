@@ -114,14 +114,14 @@ def is_visible(p1, p2, obstacles, p1_obj=None, p2_obj=None):
             return False
     return True
 
-def build_visibility_graph(points, obstacles):
+def build_visibility_graph(points, obstacles, turn_points_around_obstacles):
     """
     Build visibility graph from all points and obstacle vertices.
     """
     G = nx.Graph()
     all_nodes = list((p.x, p.y) for p in points)
 
-    for obs in obstacles:
+    for obs in turn_points_around_obstacles:
         all_nodes.extend(list(obs.exterior.coords)[:-1])  # skip closing vertex
 
     for i, node in enumerate(all_nodes):
@@ -276,7 +276,8 @@ def reconstruct_full_path(paths, best_order, points):
 
     return full_path
 
-def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_obstacles, safe_points):
+def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_obstacles,
+                          safe_points, turn_points_around_obstacles):
     """
     Plan route avoiding obstacles with VIP and balls.
     """
@@ -292,7 +293,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
 
     points.append(end)
 
-    G, all_nodes = build_visibility_graph(points, inflated_obstacles)
+    G, all_nodes = build_visibility_graph(points, inflated_obstacles, turn_points_around_obstacles)
     points_indices = list(range(len(points)))
 
     reachable = set()
@@ -336,7 +337,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
     new_points += filtered_others
     new_points.append(filtered_end)
 
-    G, all_nodes = build_visibility_graph(new_points, inflated_obstacles)
+    G, all_nodes = build_visibility_graph(new_points, inflated_obstacles, turn_points_around_obstacles)
     points_indices = list(range(len(new_points)))
     dist, paths = compute_distance_matrix(G, all_nodes, points_indices)
 
@@ -358,7 +359,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         return [], 0, [], new_vip is not None
 
 def path_finding(
-        cross, egg, start, vip, balls, end, wall_corners, robot_radius=10.5,
+        cross, egg, start, vip, balls, end, wall_corners, robot_radius=14.5,
         width=160, height=120, debug=False, start_angle=0):
     """
     Main interface to compute full route.
@@ -381,6 +382,8 @@ def path_finding(
 
     inflated_obstacles = [obs.buffer(robot_radius).simplify(1.5) for obs in obstacles]
 
+    turn_points_around_obstacles = [obs.buffer(robot_radius + 8).simplify(1.5) for obs in obstacles]
+
     safe_points = generate_safe_points(wall_corners) if wall_corners else []
 
     min_clearance = 28
@@ -390,7 +393,7 @@ def path_finding(
     ]
 
     best_order, best_length, full_path, has_vip = plan_route_free_space(
-        start, vip, balls, end, inflated_obstacles, obstacles, safe_points
+        start, vip, balls, end, inflated_obstacles, obstacles, safe_points, turn_points_around_obstacles
     )
 
     plot_route(start, vip, balls, end, inflated_obstacles, safe_points, full_path,

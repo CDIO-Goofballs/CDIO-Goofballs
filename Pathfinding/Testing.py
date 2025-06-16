@@ -24,7 +24,7 @@ class TestPathFinding(unittest.TestCase):
             cx = random.uniform(width/2 - 10, width/2 + 10)
             cy = random.uniform(height/2 - 10, height/2 + 10)
             cross = generate_random_cross(cx, cy, size=20)
-            robot_radius = 10.5
+            robot_radius = 14.5
 
             start = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))
             end = (random.uniform(margin, offset_width), random.uniform(margin, offset_height))

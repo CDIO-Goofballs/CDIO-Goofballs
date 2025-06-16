@@ -34,7 +34,7 @@ class TestCrossRotations(unittest.TestCase):
         self.width = 160
         self.height = 120
         self.wall_corners = ((0, 0), (0, self.height), (self.width, self.height), (self.width, 0))
-        self.robot_radius = 10.5
+        self.robot_radius = 14.5
 
         # Base cross size ~20 units centered at (80, 60)
         half_size = 10  # half of 20

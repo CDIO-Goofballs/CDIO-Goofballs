@@ -3,6 +3,7 @@ import math
 import numpy as np
 from shapely import Point
 from shapely.geometry import Polygon
+from shapely.ops import unary_union
 
 from Pathfinding.Point import MyPoint
 
@@ -51,8 +52,10 @@ def convert_cross_to_polygons(cross_points, arm_width=3):
     polygons = []
     if vertical: polygons.append(vertical)
     if horizontal: polygons.append(horizontal)
-    return polygons
 
+    # Combine them into a single polygon
+    cross_shape = unary_union(polygons)
+    return [cross_shape]
 def create_wall_polygon(p1, p2, thickness=1.5):
     """
     Create a thin rectangular polygon between two points, offset perpendicular to the direction.
