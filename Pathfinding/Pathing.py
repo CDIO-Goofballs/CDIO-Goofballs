@@ -1,12 +1,85 @@
 import math
 import numpy as np
 from shapely.geometry import LineString, Point
+from shapely.ops import nearest_points
 import networkx as nx
 from networkx.algorithms.approximation import traveling_salesman_problem
 
 from Pathfinding.Plotting import plot_route
 from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, generate_safe_points
 from Pathfinding.Point import MyPoint
+
+
+def find_nearest_free_point(point, obstacles, search_radius=12, step=1):
+    """
+    Given a point inside an obstacle, return the nearest visible point outside all obstacles.
+    """
+    for r in np.arange(step, search_radius, step):
+        # Sample points around the circle
+        for angle in np.linspace(0, 2 * math.pi, int(2 * math.pi * r / step)):
+            dx, dy = r * math.cos(angle), r * math.sin(angle)
+            candidate = Point(point.x + dx, point.y + dy)
+            if not any(obs.contains(candidate) for obs in obstacles):
+                return MyPoint(candidate.x, candidate.y)
+    return None
+
+
+def find_aligned_safe_point(safe_points, ball, inflated_obstacles, original_obstacles, min_distance=28):
+    """
+    Step 1: Find the closest free point to the ball.
+    Step 2: Push that point.
+    Step 3: Find the closest safe point to the pushed point.
+    Returns the nearest safe point.
+    """
+
+
+    def point_inline(stuck_ball, free_point, t):
+        """
+        Returns a point along the line from ball to free_point.
+        t = 0   → ball
+        t = 1   → free_point
+        t < 1   → between ball and free point
+        t > 1   → beyond free point
+        """
+        dx = free_point.x - stuck_ball.x
+        dy = free_point.y - stuck_ball.y
+        return MyPoint(stuck_ball.x + dx * t, stuck_ball.y + dy * t)
+
+    def distance(a, b):
+        return np.linalg.norm(np.array([a.x, a.y]) - np.array([b.x, b.y]))
+
+
+    # Step 1: Find closest free point to ball
+    closest_free = find_nearest_free_point(ball, inflated_obstacles)
+
+    if closest_free is None:
+        return find_nearest_safe_point(safe_points, ball, original_obstacles)
+
+    # Step 2: Push the point along the ball→closest_free vector
+    pushed_point = point_inline(ball,closest_free, t=2)
+
+    # Step 3: Find the closest safe point to the pushed point
+    nearest_safe = None
+    nearest_dist = float('inf')  # track shortest distance found
+
+    for pt in safe_points:
+        if pt == closest_free:
+            continue  # skip original point
+        if not is_visible((ball.x, ball.y), (pt.x, pt.y), original_obstacles):
+            continue
+
+        pushed_to_safe = distance(pushed_point, pt)  # numeric distance
+        ball_to_safe = distance(ball,pt) # numeric distance
+
+        if min_distance <= ball_to_safe and pushed_to_safe < nearest_dist:
+            nearest_dist = pushed_to_safe
+            nearest_safe = pt
+
+    # Wrap result
+    aligned_pt = None if nearest_safe is None else MyPoint(nearest_safe.x, nearest_safe.y, type='safeV1', target=ball)
+
+    return aligned_pt
+
 
 def find_nearest_safe_point(safe_points, point, obstacles, min_distance = 28):
     """
@@ -28,7 +101,7 @@ def find_nearest_safe_point(safe_points, point, obstacles, min_distance = 28):
     if shortest_distance == float('inf'):
         return None
 
-    return MyPoint(candidate_x, candidate_y, type='safe', target=point)
+    return MyPoint(candidate_x, candidate_y, type='safeV2', target=point)
 
 def is_visible(p1, p2, obstacles, p1_obj=None, p2_obj=None):
     """
@@ -231,7 +304,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         if vip_idx in reachable:
             new_vip = vip
         else:
-            replacement = find_nearest_safe_point(safe_points, vip, original_obstacles)
+            replacement = find_aligned_safe_point(safe_points, vip, inflated_obstacles, original_obstacles)
             if replacement:
                 new_vip = replacement
             else:
@@ -247,7 +320,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         if idx in reachable:
             filtered_others.append(pt)
         else:
-            replacement = find_nearest_safe_point(safe_points, pt, original_obstacles)
+            replacement = find_aligned_safe_point(safe_points, pt, inflated_obstacles, original_obstacles)
             if replacement:
                 filtered_others.append(replacement)
             else:
