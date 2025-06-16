@@ -48,22 +48,8 @@ def stop():
     while (not queue.empty()):
         queue.get()
     
-def adjust_to_gyro(target_deg, speed=20):
-    print("Target angle: ", target_deg)
-    while move_diff.gyro.angle - target_deg > 1 and not stop_event.is_set():  # allow a tiny error range
-        current_angle = move_diff.gyro.angle
-        if current_angle > target_deg:
-            # turn right (clockwise)
-            move_diff.turn_right(SpeedPercent(speed), 2)
-        else:
-            # turn left (counter-clockwise)
-            move_diff.turn_left(SpeedPercent(speed), 2)
-        time.sleep(0.01)
-    
 def rotate(angle, speed=ROTATION_SPEED):
     move_diff.turn_degrees(speed = SpeedPercent(speed), degrees = angle, use_gyro = False)
-    #adjust_to_gyro(-angle)
-    #move_diff.gyro.reset()
     
 
 def straight(distance, speed = STRAIGHT_SPEED):
@@ -82,7 +68,6 @@ def execute_command(conn):
         if(cmd == "drive"): straight(float(arg)) # Invert directionen since front is back.
         elif(cmd == "turn"): rotate(-float(arg))
         elif(cmd == "servo"): move_servo(int(arg))
-        print("Done!")
         time.sleep(0.1)
         conn.send("Done".encode())
 
