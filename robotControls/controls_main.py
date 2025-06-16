@@ -75,7 +75,7 @@ def collect_ball(target, drive_back=False):
     drive_with_cam(target, drive_back=drive_back)
     time.sleep(0.5)  # Maybe needed
     run_image_recognition()
-    if target.type == 'safe':
+    if target.type == 'safeV1' or target.type == 'safeV2':
         print("Arrived at safe point, proceeding to target")
         print("Target:", target.target)
         collect_ball(target.target, drive_back=True)
