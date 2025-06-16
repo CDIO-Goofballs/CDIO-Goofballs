@@ -308,9 +308,9 @@ def path_finding(
 
     inflated_obstacles = [obs.buffer(robot_radius).simplify(1.5) for obs in obstacles]
 
-    safe_points = generate_safe_points(wall_corners, margin=30) if wall_corners else []
+    safe_points = generate_safe_points(wall_corners) if wall_corners else []
 
-    min_clearance = 29
+    min_clearance = 28
     safe_points = [
         pt for pt in safe_points
         if all(Point(pt.x, pt.y).distance(obs) >= min_clearance for obs in obstacles)
