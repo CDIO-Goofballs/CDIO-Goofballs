@@ -43,7 +43,9 @@ def drive_with_cam(target, drive_back=False):
     original_distance = distance
 
     print("Distance to target:", distance, "mm")
-    slow_zone = 80 if targeting_ball else 200
+    slow_zone = 80 if targeting_ball else 240
+    slow_speed = 20 if targeting_ball else 35
+    off_course_angle = 2 if targeting_ball else 10
 
     while distance > slow_zone:
         send_command((Command.DRIVE, (distance * 2 / 3, 50), ))
@@ -51,7 +53,7 @@ def drive_with_cam(target, drive_back=False):
         run_image_recognition()
         position = get_position_mm()
         target_angle = calculate_turn(position, target, 0)
-        if abs(get_angle() - target_angle) > 2:
+        if abs(get_angle() - target_angle) > off_course_angle:
             rotate_with_cam(target)
             position = get_position_mm()
         distance = calculate_distance(position, target) - offset
@@ -59,7 +61,7 @@ def drive_with_cam(target, drive_back=False):
 
     if targeting_ball:
         send_command((Command.SERVO, 35),)
-    send_command((Command.DRIVE, (distance, 20)), )
+    send_command((Command.DRIVE, (distance, slow_speed)), )
     wait_for_done()
     if targeting_ball:
         time.sleep(4)
