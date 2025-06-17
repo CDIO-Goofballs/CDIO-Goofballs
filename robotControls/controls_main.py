@@ -85,7 +85,7 @@ def drive_to_target(target, drive_back=False):
     if target.type == 'safeV1' or target.type == 'safeV2':
         print("Arrived at safe point, proceeding to target")
         print("Target:", target.target)
-        drive_to_target(target.target, drive_back=True)
+        drive_to_target(target.target, drive_back=target.target.type != 'end')
 
 def collect_balls(image):
     run_image_recognition(image)
@@ -109,9 +109,11 @@ def collect_balls(image):
         for point in modified_path[1:]:
             drive_to_target(point)
             run_image_recognition(image)
-        if modified_path[-1].type == 'end':
-            print("End has been reached")
-            end_reached = True
+        if modified_path[-1].type == 'safeV1' or modified_path[-1].type == 'safeV2':
+            if modified_path[-1].target.type == 'end':
+                print("End has been reached")
+                end_reached = True
+
 
     send_command((Command.SERVO, -100), )
     wait_for_done()

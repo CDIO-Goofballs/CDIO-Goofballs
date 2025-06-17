@@ -276,7 +276,7 @@ def reconstruct_full_path(paths, best_order, points):
     return full_path
 
 def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_obstacles,
-                          safe_points):
+                          safe_points, width):
     """
     Plan route avoiding obstacles with VIP and balls.
     """
@@ -326,7 +326,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
             else:
                 print("Replacement not found")
 
-    filtered_end = end if (len(points) - 1) in reachable else None
+    filtered_end = get_end_safe_point(end, width, safe_points)
     if filtered_end is None:
         return [], 0, [], vip is not None
 
@@ -356,6 +356,18 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
     except Exception as e:
         print(e)
         return [], 0, [], new_vip is not None
+
+def get_end_safe_point(end, width, safe_points):
+    safe = safe_points.copy()
+    if end.x < width / 2:
+        safe.sort(key=lambda pt: pt.x - pt.y)
+        return MyPoint(safe[0].x, safe[0].y, type='safeV2', target=end)
+        # Find upper safe point
+    else:
+        safe.sort(key=lambda pt: pt.y - pt.x)
+        return MyPoint(safe[0].x, safe[0].y, type='safeV2', target=end)
+        # Find lower safe point
+
 
 def path_finding(
         cross, egg, start, vip, balls, end, wall_corners, robot_radius=17,
@@ -390,7 +402,7 @@ def path_finding(
     ]
 
     best_order, best_length, full_path, has_vip = plan_route_free_space(
-        start, vip, balls, end, inflated_obstacles, obstacles, safe_points
+        start, vip, balls, end, inflated_obstacles, obstacles, safe_points, width=width
     )
 
     plot_route(start, vip, balls, end, inflated_obstacles, safe_points, full_path,
