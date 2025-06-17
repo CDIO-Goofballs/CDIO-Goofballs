@@ -74,7 +74,7 @@ def drive_with_cam(target, drive_back=False):
         send_command((Command.DRIVE, (-original_distance, 40)), )
         wait_for_done()
 
-def collect_ball(target, drive_back=False):
+def drive_to_target(target, drive_back=False):
     rotate_with_cam(target=target)
     time.sleep(0.5)
     run_image_recognition()
@@ -84,7 +84,7 @@ def collect_ball(target, drive_back=False):
     if target.type == 'safeV1' or target.type == 'safeV2':
         print("Arrived at safe point, proceeding to target")
         print("Target:", target.target)
-        collect_ball(target.target, drive_back=True)
+        drive_to_target(target.target, drive_back=True)
 
 def collect_balls(image):
     run_image_recognition(image)
@@ -98,8 +98,17 @@ def collect_balls(image):
         for p in modified_path:
             if p.type == 'safeV1' or p.type == 'safeV2':
                 p.target = MyPoint(10 * p.target.x, 10 * p.target.y, type=p.target.type)
-        collect_ball(modified_path[1])
-        run_image_recognition(image)
+
+        # Find first subpath in the path that ends with a ball or VIP
+        sub_path = []
+        for i in range(1, len(modified_path)):
+            if (modified_path[i].type == 'ball' or modified_path[i].type == 'vip'
+                    or modified_path[i].type == 'safeV1' or modified_path[i].type == 'safeV2'):
+                sub_path = modified_path[:i + 1]
+                break
+        for point in sub_path[1:]:
+            drive_to_target(point)
+            run_image_recognition(image)
     send_command((Command.SERVO, -100), )
     time.sleep(6)
     send_command((Command.SERVO, 0), )
