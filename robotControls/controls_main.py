@@ -4,7 +4,7 @@ from robotControls.controlCenter import send_command, Command, calculate_distanc
 from Pathfinding.pathing_main import pathing
 import time
 
-ROBOT_LENGTH = 260
+ROBOT_LENGTH = 250
 
 
 def get_difference_in_position(robot_position, new_robot_position):
@@ -26,7 +26,7 @@ def rotate_with_cam(target):
     send_command((Command.TURN, turning_angle), )
     wait_for_done()
     run_image_recognition()
-    while abs(get_angle() - target_angle) > 1:
+    while abs(get_angle() - target_angle) > 1.8:
         diff_angle = (get_angle() - target_angle + 180) % 360 - 180
         send_command((Command.TURN, -diff_angle * 2 / 3), )
         wait_for_done()
@@ -43,9 +43,9 @@ def drive_with_cam(target, drive_back=False):
     original_distance = distance
 
     print("Distance to target:", distance, "mm")
-    slow_zone = 80 if targeting_ball else 240
+    slow_zone = 80 if targeting_ball else 280
     slow_speed = 20 if targeting_ball else 35
-    off_course_angle = 2 if targeting_ball else 10
+    off_course_angle = 2 if targeting_ball else 6
 
     while distance > slow_zone:
         send_command((Command.DRIVE, (distance * 2 / 3, 50), ))
@@ -69,7 +69,7 @@ def drive_with_cam(target, drive_back=False):
     wait_for_done()
     if targeting_ball:
         time.sleep(4)
-        send_command((Command.SERVO, 0),)
+        #send_command((Command.SERVO, 0),)
     if drive_back:
         send_command((Command.DRIVE, (-original_distance, 40)), )
         wait_for_done()
