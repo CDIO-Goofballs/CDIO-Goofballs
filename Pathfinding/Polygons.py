@@ -154,6 +154,6 @@ def generate_edge_points(corners, long_n=10, short_n=6):
             points.append(MyPoint(pt[0], pt[1]))
     return points
 
-def generate_safe_points(course_corners, margin=35, long_points=10, short_points=6):
+def generate_safe_points(course_corners, margin=31, long_points=10, short_points=6):
     inset_corners = compute_inset_rectangle(course_corners, margin)
     return generate_edge_points(inset_corners, long_n=long_points, short_n=short_points)
