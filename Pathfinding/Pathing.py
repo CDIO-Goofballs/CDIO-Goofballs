@@ -24,7 +24,7 @@ def find_nearest_free_point(point, obstacles, search_radius=12, step=1):
     return None
 
 
-def find_aligned_safe_point(safe_points, ball, inflated_obstacles, original_obstacles, min_distance=28):
+def find_aligned_safe_point(safe_points, ball, inflated_obstacles, original_obstacles, min_distance=25):
     """
     Step 1: Find the closest free point to the ball.
     Step 2: Push that point.
@@ -81,7 +81,7 @@ def find_aligned_safe_point(safe_points, ball, inflated_obstacles, original_obst
     return aligned_pt
 
 
-def find_nearest_safe_point(safe_points, point, obstacles, min_distance = 28):
+def find_nearest_safe_point(safe_points, point, obstacles, min_distance = 25):
     """
     Given a point inside an obstacle, return the nearest safe point outside
     all obstacles and at a distance of minimum length corresponding to robot length.
