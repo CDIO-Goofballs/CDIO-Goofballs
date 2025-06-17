@@ -12,7 +12,7 @@ import ast
 # Constants
 WHEEL_DIAMETER_MM = 67 # Real life size is 68.8 mm
 WHEEL_WIDTH_MM = 36 # Real life size is 36 mm
-WHEEL_BASE_MM = 400 # Real life size is 170 mm
+WHEEL_BASE_MM = 300 # Real life size is 170 mm
 
 ROTATION_SPEED = 40
 STRAIGHT_SPEED = 50
@@ -69,8 +69,14 @@ def execute_command(conn):
         if cmd == "drive": straight(arg[0], speed=arg[1])
         elif cmd == "turn": rotate(-arg)
         elif cmd == "servo": move_servo(arg)
+        elif cmd == "test": test()
         time.sleep(0.1)
         conn.send("Done".encode())
+
+def test():
+    print("Wait for sleep")
+    time.sleep(10)
+    print("Test complete.")
 
 def move_servo(position):
     global servo_position

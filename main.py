@@ -1,5 +1,5 @@
 import time
-from robotControls.controlCenter import connect, send_command, Command
+from robotControls.controlCenter import connect, send_command, Command, wait_for_done
 from robotControls.controls_main import collect_balls
 from ImageRecognition.RoboFlow.MainImageRecognition import initialize_camera, run_image_recognition, stop_image_recognition
 from Pathfinding.pathing_main import pathing
@@ -37,13 +37,21 @@ def no_robot(camera_index=0):
 
   stop_image_recognition()
 
+def test_wait_for_done():
+    connect()
+    print("Waiting for done...")
+    send_command((Command.TEST, None))
+    send_command((Command.TEST, None))
+    send_command((Command.TEST, None))
+    wait_for_done()
+    wait_for_done()
+    wait_for_done()
+    print("Done received.")
+
 if __name__ == "__main__":
     # Uncomment the line below to run with the robot and a specific camera index
-    
+
     with_robot(camera_index=1)
     keyboard.wait('q')
     # Uncomment the line below to run without the robot and a specific camera index
     #no_robot(camera_index=1)
-
-
-# TODO change robot speed when close to the ball

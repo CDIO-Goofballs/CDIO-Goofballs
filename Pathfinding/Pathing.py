@@ -183,7 +183,7 @@ def solve_tsp_approx(dist, start_idx=0, end_idx=None, must_visit_first=None):
             G[j][i]['weight'] = dist[j][i]
 
     try:
-        tsp_path = traveling_salesman_problem(G, cycle=False, weight='weight', method=nx.approximation.christofides)
+        tsp_path = traveling_salesman_problem(G, cycle=False, weight='weight', method=nx.approximation.greedy_tsp)
     except Exception as e:
         print("TSP solver failed:", e)
         return [], float('inf')

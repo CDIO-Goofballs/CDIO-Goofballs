@@ -4,7 +4,7 @@ from robotControls.controlCenter import send_command, Command, calculate_distanc
 from Pathfinding.pathing_main import pathing
 import time
 
-ROBOT_LENGTH = 250
+ROBOT_LENGTH = 240
 
 
 def get_difference_in_position(robot_position, new_robot_position):
@@ -20,7 +20,6 @@ def get_difference_in_angle(robot_angle, new_robot_angle):
 
 
 def rotate_with_cam(target):
-    print(get_angle())
     turning_angle = calculate_turn(get_position_mm(), target, get_angle())
     target_angle = calculate_turn(get_position_mm(), target, 0)
     send_command((Command.TURN, turning_angle), )
@@ -38,7 +37,7 @@ def drive_with_cam(target, drive_back=False):
     position = get_position_mm()
     targeting_ball = target.type == 'ball' or target.type == 'vip'
 
-    offset = ROBOT_LENGTH if targeting_ball else 0
+    offset = ROBOT_LENGTH if targeting_ball else 50
     distance = calculate_distance(position, target) - offset
     original_distance = distance
 
@@ -50,6 +49,7 @@ def drive_with_cam(target, drive_back=False):
     while distance > slow_zone:
         send_command((Command.DRIVE, (distance * 2 / 3, 50), ))
         wait_for_done()
+        run_image_recognition()
         run_image_recognition()
         position = get_position_mm()
         target_angle = calculate_turn(position, target, 0)
@@ -65,6 +65,7 @@ def drive_with_cam(target, drive_back=False):
 
     if targeting_ball:
         send_command((Command.SERVO, 35),)
+        wait_for_done()
     send_command((Command.DRIVE, (distance, slow_speed)), )
     wait_for_done()
     if targeting_ball:
@@ -88,27 +89,32 @@ def drive_to_target(target, drive_back=False):
 
 def collect_balls(image):
     run_image_recognition(image)
-    while len(get_balls()) > 0 or get_vip_ball() is not None:
+    end_reached = False
+    while not end_reached:
         path = pathing()
         if not path:
             continue
-        path = path[0:2]
-        print(path)
-        modified_path = [MyPoint(10 * p.x, 10 * p.y, type=p.type, target=p.target) for p in path] # Convert from cm to mm
+        # Find first subpath in the path that ends with a ball or VIP
+        sub_path = []
+        for i in range(1, len(path)):
+            if path[i].type != 'turn':
+                sub_path = path[:i + 1]
+                break
+        modified_path = [MyPoint(10 * p.x, 10 * p.y, type=p.type, target=p.target) for p in sub_path] # Convert from cm to mm
         for p in modified_path:
             if p.type == 'safeV1' or p.type == 'safeV2':
                 p.target = MyPoint(10 * p.target.x, 10 * p.target.y, type=p.target.type)
 
-        # Find first subpath in the path that ends with a ball or VIP
-        sub_path = []
-        for i in range(1, len(modified_path)):
-            if (modified_path[i].type == 'ball' or modified_path[i].type == 'vip'
-                    or modified_path[i].type == 'safeV1' or modified_path[i].type == 'safeV2'):
-                sub_path = modified_path[:i + 1]
-                break
-        for point in sub_path[1:]:
+        print("Modified path: ", modified_path)
+        for point in modified_path[1:]:
             drive_to_target(point)
             run_image_recognition(image)
+        if modified_path[-1].type == 'end':
+            print("End has been reached")
+            end_reached = True
+
     send_command((Command.SERVO, -100), )
+    wait_for_done()
     time.sleep(6)
     send_command((Command.SERVO, 0), )
+    wait_for_done()

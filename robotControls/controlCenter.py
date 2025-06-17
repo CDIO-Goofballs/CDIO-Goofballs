@@ -26,13 +26,14 @@ def connect():
 def wait_for_done():
     global conn
     if server_socket is None:
-        print("Serversocket is None") 
+        print("Serversocket is None")
         return
     msg = ""
     while msg != "Done":
         data = conn.recv(1024)
         if not data:
             continue
+        print(data.decode())
         msg = data.decode()
     
 def reconnect():
@@ -56,6 +57,7 @@ class Command(Enum):
     TURN = "turn"
     STOP = "stop"
     SERVO = "servo"
+    TEST = "test"
 
 def send_command(command: tuple[Command, Any]):
     print(command)
@@ -72,12 +74,7 @@ def send_commands(commands):
     for command in commands:
         send_command(command)
 
-#keyboard.add_hotkey('b', send_commands, args=(points_to_commands(robot_start_angle=robot_start_angle, positions=positions),))
 keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
-#keyboard.add_hotkey('w', send_command, args=((Command.DRIVE, 800),))
-#keyboard.add_hotkey('d', send_command, args=((Command.TURN, 90),))
-#keyboard.add_hotkey('a', send_command, args=((Command.TURN, -90),))
-#keyboard.add_hotkey('s', send_command, args=((Command.DRIVE, -800),))
 keyboard.add_hotkey('t', send_command, args=((Command.SERVO, 30),))
 keyboard.add_hotkey('y', send_command, args=((Command.SERVO, 0),))
 keyboard.add_hotkey('u', send_command, args=((Command.SERVO, -80),))

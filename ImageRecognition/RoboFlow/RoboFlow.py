@@ -32,10 +32,6 @@ def object_recognition(img, scale_factor):
     balls.clear()
     vip_ball = None
     wall_points.clear()
-    cross = None
-    egg = None
-    small_goal = None
-    big_goal = None
 
     vips = []
     cross_objects = []

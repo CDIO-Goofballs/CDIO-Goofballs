@@ -5,7 +5,7 @@ from ImageRecognition.RoboFlow.RoboFlow import object_recognition, big_goal
 from ImageRecognition.RoboFlow.CoordinateMapping import find_aruco
 from Pathfinding.Point import MyPoint
 
-scale_factor = 1
+scale_factor = 0.33
 latest_position = None
 latest_angle = 0
 balls = []
