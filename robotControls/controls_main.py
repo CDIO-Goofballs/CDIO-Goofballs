@@ -96,7 +96,7 @@ def collect_balls(image):
         print(path)
         modified_path = [MyPoint(10 * p.x, 10 * p.y, type=p.type, target=p.target) for p in path] # Convert from cm to mm
         for p in modified_path:
-            if p.type == 'safe':
+            if p.type == 'safeV1' or p.type == 'safeV2':
                 p.target = MyPoint(10 * p.target.x, 10 * p.target.y, type=p.target.type)
         collect_ball(modified_path[1])
         run_image_recognition(image)
