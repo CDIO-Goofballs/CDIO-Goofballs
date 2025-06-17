@@ -53,6 +53,10 @@ def drive_with_cam(target, drive_back=False):
         run_image_recognition()
         position = get_position_mm()
         target_angle = calculate_turn(position, target, 0)
+        distance = calculate_distance(position, target) - offset
+        if not targeting_ball and distance < 80:
+            print("Distance is less than 80mm, stopping")
+            break
         if abs(get_angle() - target_angle) > off_course_angle:
             rotate_with_cam(target)
             position = get_position_mm()
