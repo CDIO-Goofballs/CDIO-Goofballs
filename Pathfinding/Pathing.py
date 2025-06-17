@@ -9,6 +9,17 @@ from Pathfinding.Plotting import plot_route
 from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, generate_safe_points
 from Pathfinding.Point import MyPoint
 
+def get_end_safe_point(end, width, safe_points):
+    safe = safe_points.copy()
+    if end.x < width / 2:
+        safe.sort(key=lambda pt: pt.x + pt.y)
+        return MyPoint(safe[0].x, safe[0].y, type='safeV2', target=end)
+        # Find upper safe point
+    else:
+        safe.sort(key=lambda pt: - pt.x - pt.y)
+        return MyPoint(safe[0].x, safe[0].y, type='safeV2', target=end)
+        # Find lower safe point
+
 
 def find_nearest_free_point(point, obstacles, search_radius=12, step=1):
     """
@@ -356,17 +367,6 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
     except Exception as e:
         print(e)
         return [], 0, [], new_vip is not None
-
-def get_end_safe_point(end, width, safe_points):
-    safe = safe_points.copy()
-    if end.x < width / 2:
-        safe.sort(key=lambda pt: pt.x - pt.y)
-        return MyPoint(safe[0].x, safe[0].y, type='safeV2', target=end)
-        # Find upper safe point
-    else:
-        safe.sort(key=lambda pt: pt.y - pt.x)
-        return MyPoint(safe[0].x, safe[0].y, type='safeV2', target=end)
-        # Find lower safe point
 
 
 def path_finding(
