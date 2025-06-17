@@ -38,6 +38,8 @@ def drive_with_cam(target, drive_back=False):
     targeting_ball = target.type == 'ball' or target.type == 'vip'
 
     offset = ROBOT_LENGTH if targeting_ball else 50
+    if target.type == 'end':
+        offset = 80
     distance = calculate_distance(position, target) - offset
     original_distance = distance
 
