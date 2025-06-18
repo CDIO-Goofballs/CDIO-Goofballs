@@ -71,10 +71,10 @@ def drive_with_cam(target, drive_back=False):
     send_command((Command.DRIVE, (distance, slow_speed)), )
     wait_for_done()
     if targeting_ball:
-        time.sleep(4)
+        time.sleep(2)
         #send_command((Command.SERVO, 0),)
     if drive_back:
-        send_command((Command.DRIVE, (-original_distance, 40)), )
+        send_command((Command.DRIVE, (-original_distance*1.3, 40)), )
         wait_for_done()
 
 def drive_to_target(target, drive_back=False):
