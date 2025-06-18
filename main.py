@@ -10,12 +10,13 @@ def with_robot(image=None, camera_index=0):
         initialize_camera(camera_index)
         
     connect()
+    keyboard.wait('s')
     print("--------------Start--------------")
     keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
     run_image_recognition(image)
     run_image_recognition(image)
     collect_balls(image)
-    #run_image_recognition()
+    #run_image_recognition()y
     #if len(get_balls()) > 0 or get_vip_ball() is not None:
     #    collect_balls(image) # Run to goal
     print("--------------DONE--------------")
