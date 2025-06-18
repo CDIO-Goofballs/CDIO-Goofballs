@@ -80,7 +80,7 @@ def drive_with_cam(target, drive_back=False):
         time.sleep(2)
         boogie_woogie()
     if drive_back:
-        send_command((Command.DRIVE, (-abs(original_distance)*1.3, 40)), )
+        send_command((Command.DRIVE, (-(abs(original_distance) + 80), 40)), )
         wait_for_done()
 
 def drive_to_target(target, drive_back=False):
