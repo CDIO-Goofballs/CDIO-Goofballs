@@ -53,7 +53,8 @@ def convert_cross_to_polygons(cross_points, arm_width=3):
     if vertical: polygons.append(vertical)
     if horizontal: polygons.append(horizontal)
 
-    return [polygons]
+    return polygons
+
 def create_wall_polygon(p1, p2, thickness=1.5):
     """
     Create a thin rectangular polygon between two points, offset perpendicular to the direction.

@@ -391,7 +391,7 @@ def path_finding(
     obstacles = cross_obstacles + egg_obstacle + boundary_walls
 
     if not start:
-        start = (100, 100)
+        start = (60, 60)
 
     start = MyPoint(start[0], start[1], type='start')
 

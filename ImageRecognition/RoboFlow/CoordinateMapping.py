@@ -5,7 +5,7 @@ import math
 camera_height = 1.70  # meters
 scale_aruco_size = 0.15  # meters
 robot_aruco_size = 0.08  # meters
-robot_aruco_height = 0.345
+robot_aruco_height = 0.35
 
 def find_aruco(image, scale_factor, width, height):
     # Convert the image to grayscale

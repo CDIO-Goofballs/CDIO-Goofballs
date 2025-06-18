@@ -38,16 +38,6 @@ def no_robot(camera_index=0):
 
   stop_image_recognition()
 
-def test_wait_for_done():
-    connect()
-    print("Waiting for done...")
-    send_command((Command.TEST, None))
-    send_command((Command.TEST, None))
-    send_command((Command.TEST, None))
-    wait_for_done()
-    wait_for_done()
-    wait_for_done()
-    print("Done received.")
 
 if __name__ == "__main__":
     # Uncomment the line below to run with the robot and a specific camera index

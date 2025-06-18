@@ -69,6 +69,7 @@ def send_command(command: tuple[Command, Any]):
     except (BrokenPipeError, ConnectionResetError, OSError):
         print("Connection lost. Reconnecting...")
         reconnect()
+    wait_for_done()
 
 def send_commands(commands):
     for command in commands:
