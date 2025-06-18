@@ -30,7 +30,7 @@ def get_end_safe_point(end, width):
         # Find lower safe point
 
 
-def find_nearest_free_point(point, obstacles, search_radius=18, step=1):
+def find_nearest_free_point(point, obstacles, search_radius=24, step=1):
     """
     Given a point inside an obstacle, return the nearest visible point outside all obstacles.
     """
