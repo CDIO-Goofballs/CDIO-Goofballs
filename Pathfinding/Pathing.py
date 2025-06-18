@@ -30,7 +30,7 @@ def get_end_safe_point(end, width):
         # Find lower safe point
 
 
-def find_nearest_free_point(point, obstacles, search_radius=12, step=1):
+def find_nearest_free_point(point, obstacles, search_radius=18, step=1):
     """
     Given a point inside an obstacle, return the nearest visible point outside all obstacles.
     """
@@ -83,8 +83,6 @@ def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_di
     nearest_dist = float('inf')  # track shortest distance found
 
     for pt in safe_points:
-        if pt == closest_free:
-            continue  # skip original point
         if not is_visible((ball.x, ball.y), (pt.x, pt.y), original_obstacles):
             continue
 
