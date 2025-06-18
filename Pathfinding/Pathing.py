@@ -44,7 +44,7 @@ def find_nearest_free_point(point, obstacles, search_radius=24, step=1):
     return None
 
 
-def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_distance=25):
+def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_distance=22):
     """
     Step 1: Find the closest free point to the ball.
     Step 2: Push that point.
