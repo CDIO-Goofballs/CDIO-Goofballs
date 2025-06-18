@@ -32,6 +32,11 @@ def rotate_with_cam(target):
         run_image_recognition()
         target_angle = calculate_turn(get_position_mm(), target, 0)
 
+def boogie_woogie():
+    send_command((Command.TURN, -10), )
+    send_command((Command.TURN, 20), )
+    send_command((Command.TURN, -10), )
+
 
 def drive_with_cam(target, drive_back=False):
     position = get_position_mm()
@@ -72,7 +77,7 @@ def drive_with_cam(target, drive_back=False):
     wait_for_done()
     if targeting_ball:
         time.sleep(2)
-        #send_command((Command.SERVO, 0),)
+        boogie_woogie()
     if drive_back:
         send_command((Command.DRIVE, (-original_distance*1.3, 40)), )
         wait_for_done()
