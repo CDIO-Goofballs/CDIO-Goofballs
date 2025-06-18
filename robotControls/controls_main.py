@@ -128,7 +128,9 @@ def collect_balls(image):
                 print("End has been reached")
                 end_reached = True
 
-
+    position = get_position_mm()
+    offset = 100 if get_angle() < 0 else -100
+    rotate_with_cam(target=MyPoint(position.x, position + offset))
     send_command((Command.SERVO, -100), )
     wait_for_done()
     time.sleep(6)
