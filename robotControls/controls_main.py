@@ -1,7 +1,8 @@
-from ImageRecognition.RoboFlow.MainImageRecognition import run_image_recognition, get_vip_ball, get_balls, get_angle, get_position_mm
+from ImageRecognition.RoboFlow.MainImageRecognition import run_image_recognition, get_angle, get_position_mm
 from Pathfinding.Point import MyPoint
 from robotControls.controlCenter import send_command, Command, calculate_distance, calculate_turn, wait_for_done
 from Pathfinding.pathing_main import pathing
+from Pathfinding.Pathing import get_safe_points
 import time
 
 ROBOT_LENGTH = 240
@@ -79,7 +80,7 @@ def drive_with_cam(target, drive_back=False):
         time.sleep(2)
         boogie_woogie()
     if drive_back:
-        send_command((Command.DRIVE, (-original_distance*1.3, 40)), )
+        send_command((Command.DRIVE, (-abs(original_distance)*1.5, 40)), )
         wait_for_done()
 
 def drive_to_target(target, drive_back=False):
@@ -100,6 +101,12 @@ def collect_balls(image):
     while not end_reached:
         path = pathing()
         if not path:
+            safe_points = get_safe_points()
+            modified_safe_points = [MyPoint(10 * pt.x, 10 * pt.y, type='turn') for pt in safe_points]  # Convert from cm to mm
+            modified_safe_points.sort(key=lambda x: calculate_distance(get_position_mm(), x))
+
+            drive_to_target(modified_safe_points[0])  # Convert from cm to mm
+            run_image_recognition(image)
             continue
         # Find first subpath in the path that ends with a ball or VIP
         sub_path = []

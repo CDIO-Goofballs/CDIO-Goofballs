@@ -9,7 +9,16 @@ from Pathfinding.Plotting import plot_route
 from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, generate_safe_points
 from Pathfinding.Point import MyPoint
 
-def get_end_safe_point(end, width, safe_points):
+safe_points = []
+
+def get_safe_points():
+    """
+    Returns the list of safe points.
+    """
+    global safe_points
+    return safe_points
+
+def get_end_safe_point(end, width):
     safe = safe_points.copy()
     if end.x < width / 2:
         safe.sort(key=lambda pt: pt.x + pt.y)
@@ -35,7 +44,7 @@ def find_nearest_free_point(point, obstacles, search_radius=12, step=1):
     return None
 
 
-def find_aligned_safe_point(safe_points, ball, inflated_obstacles, original_obstacles, min_distance=25):
+def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_distance=25):
     """
     Step 1: Find the closest free point to the ball.
     Step 2: Push that point.
@@ -64,7 +73,7 @@ def find_aligned_safe_point(safe_points, ball, inflated_obstacles, original_obst
     closest_free = find_nearest_free_point(ball, inflated_obstacles)
 
     if closest_free is None:
-        return find_nearest_safe_point(safe_points, ball, original_obstacles)
+        return find_nearest_safe_point(ball, original_obstacles)
 
     # Step 2: Push the point along the ball→closest_free vector
     pushed_point = point_inline(ball,closest_free, t=2)
@@ -92,7 +101,7 @@ def find_aligned_safe_point(safe_points, ball, inflated_obstacles, original_obst
     return aligned_pt
 
 
-def find_nearest_safe_point(safe_points, point, obstacles, min_distance = 25):
+def find_nearest_safe_point(point, obstacles, min_distance = 25):
     """
     Given a point inside an obstacle, return the nearest safe point outside
     all obstacles and at a distance of minimum length corresponding to robot length.
@@ -125,7 +134,7 @@ def is_visible(p1, p2, obstacles, p1_obj=None, p2_obj=None):
             return False
     return True
 
-def build_visibility_graph(points, obstacles, safe_points):
+def build_visibility_graph(points, obstacles):
     """
     Build visibility graph from all points and obstacle vertices.
     """
@@ -287,7 +296,7 @@ def reconstruct_full_path(paths, best_order, points):
     return full_path
 
 def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_obstacles,
-                          safe_points, width):
+                          width):
     """
     Plan route avoiding obstacles with VIP and balls.
     """
@@ -303,7 +312,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
 
     points.append(end)
 
-    G, all_nodes = build_visibility_graph(points, inflated_obstacles, safe_points)
+    G, all_nodes = build_visibility_graph(points, inflated_obstacles)
     points_indices = list(range(len(points)))
 
     reachable = set()
@@ -315,7 +324,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         if vip_idx in reachable:
             new_vip = vip
         else:
-            replacement = find_aligned_safe_point(safe_points, vip, inflated_obstacles, original_obstacles)
+            replacement = find_aligned_safe_point(vip, inflated_obstacles, original_obstacles)
             if replacement:
                 new_vip = replacement
             else:
@@ -331,13 +340,13 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         if idx in reachable:
             filtered_others.append(pt)
         else:
-            replacement = find_aligned_safe_point(safe_points, pt, inflated_obstacles, original_obstacles)
+            replacement = find_aligned_safe_point(pt, inflated_obstacles, original_obstacles)
             if replacement:
                 filtered_others.append(replacement)
             else:
                 print("Replacement not found")
 
-    filtered_end = get_end_safe_point(end, width, safe_points)
+    filtered_end = get_end_safe_point(end, width)
     if filtered_end is None:
         return [], 0, [], vip is not None
 
@@ -347,7 +356,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
     new_points += filtered_others
     new_points.append(filtered_end)
 
-    G, all_nodes = build_visibility_graph(new_points, inflated_obstacles, safe_points)
+    G, all_nodes = build_visibility_graph(new_points, inflated_obstacles)
     points_indices = list(range(len(new_points)))
     dist, paths = compute_distance_matrix(G, all_nodes, points_indices)
 
@@ -375,6 +384,7 @@ def path_finding(
     """
     Main interface to compute full route.
     """
+    global safe_points
 
     cross_obstacles = convert_cross_to_polygons(cross, 3) if cross else []
     boundary_walls = create_boundary_walls_from_corners(wall_corners, thickness=1.5) if wall_corners else []
@@ -402,7 +412,7 @@ def path_finding(
     ]
 
     best_order, best_length, full_path, has_vip = plan_route_free_space(
-        start, vip, balls, end, inflated_obstacles, obstacles, safe_points, width=width
+        start, vip, balls, end, inflated_obstacles, obstacles, width=width
     )
 
     plot_route(start, vip, balls, end, inflated_obstacles, safe_points, full_path,
