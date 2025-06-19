@@ -1,4 +1,5 @@
 import math
+import traceback
 
 import networkx as nx
 import numpy as np
@@ -6,7 +7,7 @@ from networkx.algorithms.approximation import traveling_salesman_problem
 from shapely.geometry import LineString, Point
 
 from Pathfinding.Plotting import plot_route
-from Pathfinding.Point import MyPoint
+from Pathfinding.Point import MyPoint, calculate_distance
 from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, \
     generate_safe_points
 
@@ -91,7 +92,7 @@ def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_di
     # Step 3: Find the closest safe point to the pushed point
     nearest_safe = None
     nearest_dist = float('inf')
-    max_allowed_angle = 45  # degrees
+    max_allowed_angle = 60  # degrees
 
     # Vector A: from ball to closest_free (push direction)
     vec_push = (closest_free.x - ball.x, closest_free.y - ball.y)
@@ -107,20 +108,26 @@ def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_di
         angle_rad = angle_between_vectors(vec_push, vec_safe)
         angle_deg = math.degrees(angle_rad)
 
-        if angle_deg > max_allowed_angle:
+        if angle_deg > max_allowed_angle and calculate_distance(pushed_point, pt) > 12:
             continue
-
 
         pushed_to_safe = distance(pushed_point, pt)
         ball_to_safe = distance(ball, pt)
 
-        if min_distance <= ball_to_safe and pushed_to_safe < nearest_dist and angle_deg < max_allowed_angle:
+        if min_distance <= ball_to_safe and pushed_to_safe < nearest_dist:
             nearest_dist = pushed_to_safe
             nearest_safe = pt
 
     if nearest_safe is None:
-        fake_pushed_point = point_inline(ball, closest_free, t=1.3)
-        return MyPoint(fake_pushed_point.x, fake_pushed_point.y, type='safeV3', target=ball)
+        vec = np.array([pushed_point.x - ball.x, pushed_point.y - ball.y])
+        length = np.linalg.norm(vec)
+        if length == 0:
+            return None
+
+        norm = (vec / length) * 25
+        new_x = ball.x + norm[0]
+        new_y = ball.y + norm[1]
+        return MyPoint(new_x, new_y, type='safeV3', target=ball)
 
     # Wrap result
     aligned_pt = None if nearest_safe is None else MyPoint(nearest_safe.x, nearest_safe.y, type='safeV1', target=ball)
@@ -395,13 +402,14 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         best_order, best_length = solve_tsp_approx(dist, start_idx=0, end_idx=len(points_indices) - 1)
 
     try:
-        if best_order:
+        if best_order and best_length < float('inf'):
             full_path = reconstruct_full_path(paths, best_order, new_points)
             return best_order, best_length, full_path, new_vip is not None
         else:
             return [], 0, [], new_vip is not None
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return [], 0, [], new_vip is not None
 
 
