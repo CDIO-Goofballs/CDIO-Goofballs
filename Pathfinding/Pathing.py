@@ -69,6 +69,15 @@ def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_di
     def distance(a, b):
         return np.linalg.norm(np.array([a.x, a.y]) - np.array([b.x, b.y]))
 
+    def angle_between_vectors(a, b):
+        """Compute angle (in radians) between two 2D vectors."""
+        dot = a[0] * b[0] + a[1] * b[1]
+        norm_a = math.hypot(*a)
+        norm_b = math.hypot(*b)
+        if norm_a == 0 or norm_b == 0:
+            return 0
+        cos_theta = max(-1, min(1, dot / (norm_a * norm_b)))
+        return math.acos(cos_theta)  # radians
 
     # Step 1: Find closest free point to ball
     closest_free = find_nearest_free_point(ball, inflated_obstacles)
@@ -81,18 +90,37 @@ def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_di
 
     # Step 3: Find the closest safe point to the pushed point
     nearest_safe = None
-    nearest_dist = float('inf')  # track shortest distance found
+    nearest_dist = float('inf')
+    max_allowed_angle = 45  # degrees
+
+    # Vector A: from ball to closest_free (push direction)
+    vec_push = (closest_free.x - ball.x, closest_free.y - ball.y)
 
     for pt in safe_points:
         if not is_visible((ball.x, ball.y), (pt.x, pt.y), original_obstacles):
             continue
 
-        pushed_to_safe = distance(pushed_point, pt)  # numeric distance
-        ball_to_safe = distance(ball,pt) # numeric distance
+        # Vector B: from ball to current safe point
+        vec_safe = (pt.x - ball.x, pt.y - ball.y)
 
-        if min_distance <= ball_to_safe and pushed_to_safe < nearest_dist:
+        # Calculate angle between push direction and candidate safe direction
+        angle_rad = angle_between_vectors(vec_push, vec_safe)
+        angle_deg = math.degrees(angle_rad)
+
+        if angle_deg > max_allowed_angle:
+            continue
+
+
+        pushed_to_safe = distance(pushed_point, pt)
+        ball_to_safe = distance(ball, pt)
+
+        if min_distance <= ball_to_safe and pushed_to_safe < nearest_dist and angle_deg < max_allowed_angle:
             nearest_dist = pushed_to_safe
             nearest_safe = pt
+
+    if nearest_safe is None:
+        fake_pushed_point = point_inline(ball, closest_free, t=1.3)
+        return MyPoint(fake_pushed_point.x, fake_pushed_point.y, type='safeV3', target=ball)
 
     # Wrap result
     aligned_pt = None if nearest_safe is None else MyPoint(nearest_safe.x, nearest_safe.y, type='safeV1', target=ball)
