@@ -78,11 +78,13 @@ def drive_with_cam(target, drive_back=False):
         send_command((Command.DRIVE, (-(abs(original_distance) + 80), 40)), )
 
 def drive_to_target(target, drive_back=False):
+    if target.type == 'turn' or target.type == 'safeV1' or target.type == 'safeV2':
+        if calculate_distance(get_position_mm(), target) < 60:
+            print("Target is too close, skipping drive")
+            return
     rotate_with_cam(target=target)
-    time.sleep(0.5)
     run_image_recognition()
     drive_with_cam(target, drive_back=drive_back)
-    time.sleep(0.5)  # Maybe needed
     run_image_recognition()
     if target.type == 'safeV1' or target.type == 'safeV2':
         print("Arrived at safe point, proceeding to target")
