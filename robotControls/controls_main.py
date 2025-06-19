@@ -32,12 +32,6 @@ def rotate_with_cam(target):
         run_image_recognition()
         target_angle = calculate_turn(get_position_mm(), target, 0)
 
-def boogie_woogie():
-    send_command((Command.TURN, 10), )
-    send_command((Command.TURN, -10), )
-    send_command((Command.TURN, -10), )
-    send_command((Command.TURN, 10), )
-
 
 def drive_with_cam(target, drive_back=False):
     position = get_position_mm()
@@ -52,7 +46,7 @@ def drive_with_cam(target, drive_back=False):
     slow_speed = 20 if targeting_ball else 35
     off_course_angle = 2 if targeting_ball else 6
     if target.type == 'end':
-        offset = 80
+        offset = 50
         send_command((Command.SERVO, 0), )
 
     if (target.type == 'safeV2' and target.target.type == 'end') or target.type == 'end':
@@ -79,8 +73,7 @@ def drive_with_cam(target, drive_back=False):
         send_command((Command.SERVO, 35),)
     send_command((Command.DRIVE, (distance, slow_speed)), )
     if targeting_ball:
-        time.sleep(2)
-        boogie_woogie()
+        time.sleep(0.5)
     if drive_back:
         send_command((Command.DRIVE, (-(abs(original_distance) + 80), 40)), )
 
