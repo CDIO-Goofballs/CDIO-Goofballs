@@ -403,7 +403,7 @@ def path_finding(
 
     safe_points = generate_safe_points(wall_corners) if wall_corners else []
 
-    min_clearance = 28 # TODO: Fix this and distance between safe and ball
+    min_clearance = 25
     safe_points = [
         pt for pt in safe_points
         if all(Point(pt.x, pt.y).distance(obs) >= min_clearance for obs in obstacles)
