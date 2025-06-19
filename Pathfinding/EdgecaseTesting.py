@@ -1,8 +1,9 @@
 import unittest
 import random
+import traceback
 from Pathing import path_finding
 from Polygons import convert_cross_to_polygons, create_egg
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point
 from unittest.mock import patch
 
 
@@ -16,6 +17,9 @@ def generate_random_cross(center_x, center_y, size=20):
 
 
 class TestPathFinding(unittest.TestCase):
+    def get_xy(self, pt):
+        return (pt.x, pt.y) if hasattr(pt, 'x') else pt
+
     def test_random_path_finding_multiple_runs(self):
         width, height = 160, 120
         wall_corners = ((0, 0), (0, height), (width, height), (width, 0))
@@ -45,7 +49,11 @@ class TestPathFinding(unittest.TestCase):
             obstacles += convert_cross_to_polygons(cross, 3)
             obstacles += create_egg(egg, 4.5) if egg else []
             inflated_obstacles = [obs.buffer(robot_radius).simplify(1.5) for obs in obstacles]
-            if any(obs.contains(Point(start)) or obs.contains(Point(end)) for obs in inflated_obstacles):
+
+            start_pt = Point(*start)
+            end_pt = Point(*end)
+
+            if any(obs.contains(start_pt) or obs.contains(end_pt) for obs in inflated_obstacles):
                 self.assertEqual(len(path), 0, "There should be no path if start or end is inside an obstacle")
             else:
                 self.assertGreater(len(path), 0, "Path should not be empty")
@@ -60,9 +68,9 @@ class TestPathFinding(unittest.TestCase):
                             wall_corners=((0, 0), (0, height), (width, height), (width, 0)),
                             robot_radius=robot_radius, width=width, height=height, debug=False)
 
-        self.assertEqual(len(path), 2)  # Possibly start and end as separate MyPoints
-        self.assertEqual((path[0].x, path[0].y), point)
-        self.assertEqual((path[-1].x, path[-1].y), point)
+        self.assertEqual(len(path), 2)
+        self.assertEqual(self.get_xy(path[0]), point)
+        self.assertEqual(self.get_xy(path[-1]), point)
 
     def test_start_inside_obstacle(self):
         width, height = 160, 120
@@ -107,7 +115,7 @@ class TestPathFinding(unittest.TestCase):
     def test_completely_blocked_path(self):
         width, height = 160, 120
         robot_radius = 10.5
-        cross = ((80, 110), (80, 10), (110, 60), (50, 60))  # Large vertical and horizontal bars in the center
+        cross = ((80, 110), (80, 10), (110, 60), (50, 60))
         start = (20, 60)
         end = (140, 60)
 
@@ -116,7 +124,7 @@ class TestPathFinding(unittest.TestCase):
                             robot_radius=robot_radius, width=width, height=height, debug=False)
 
         self.assertEqual(len(path), 0)
-    
+
     def test_path_around_border(self):
         width, height = 160, 120
         robot_radius = 10.5
@@ -154,21 +162,21 @@ class TestPathFinding(unittest.TestCase):
                             wall_corners=((0, 0), (0, height), (width, height), (width, 0)),
                             robot_radius=robot_radius, width=width, height=height, debug=False)
 
-        self.assertTrue(isinstance(path, list))
+        self.assertIsInstance(path, list)
 
     def test_narrow_passage(self):
         width, height = 100, 100
-        cross = ((45, 0), (55, 0), (55, 100), (45, 100))  # Vertical wall with 10-unit gap
+        cross = ((45, 0), (55, 0), (55, 100), (45, 100))
         start = (10, 50)
         end = (90, 50)
-        robot_radius = 5  # Fits exactly through the 10-unit gap
+        robot_radius = 5
 
         path = path_finding(cross=cross, egg=None, start=start, vip=None, balls=[], end=end,
                             wall_corners=((0, 0), (0, height), (width, height), (width, 0)),
                             robot_radius=robot_radius, width=width, height=height, debug=False)
 
         self.assertGreater(len(path), 0)
-    
+
     def test_vip_present_but_not_blocking(self):
         width, height = 160, 120
         robot_radius = 10.5
@@ -181,18 +189,18 @@ class TestPathFinding(unittest.TestCase):
                             robot_radius=robot_radius, width=width, height=height, debug=False)
 
         self.assertGreater(len(path), 0)
-    
+
     def test_ball_directly_on_straight_path(self):
         width, height = 100, 100
         start = (10, 10)
         end = (90, 90)
-        balls = (50, 50)  # Right in the middle of the direct path
+        balls = [(50, 50)]
         robot_radius = 10.5
-    
+
         path = path_finding(cross=None, egg=None, start=start, vip=None, balls=balls, end=end,
                             wall_corners=((0, 0), (0, height), (width, height), (width, 0)),
                             robot_radius=robot_radius, width=width, height=height, debug=False)
-    
+
         self.assertGreater(len(path), 0)
 
     def test_large_map(self):
@@ -209,7 +217,7 @@ class TestPathFinding(unittest.TestCase):
 
     def test_obstacle_touching_border(self):
         width, height = 100, 100
-        cross = ((0, 10), (0, 90), (10, 90), (10, 10))  # Obstacle flush with left wall
+        cross = ((0, 10), (0, 90), (10, 90), (10, 10))
         start = (20, 50)
         end = (90, 50)
         robot_radius = 5
@@ -222,16 +230,17 @@ class TestPathFinding(unittest.TestCase):
 
     def test_diagonal_wall_channel(self):
         width, height = 100, 100
-        cross = ((20, 80), (80, 20), (85, 25), (25, 85))  # Diagonal cross
+        cross = ((20, 80), (80, 20), (85, 25), (25, 85))
         start = (10, 10)
         end = (90, 90)
         robot_radius = 4
-    
+
         path = path_finding(cross=cross, egg=None, start=start, vip=None, balls=[], end=end,
                             wall_corners=((0, 0), (0, height), (width, height), (width, 0)),
                             robot_radius=robot_radius, width=width, height=height, debug=False)
-    
+
         self.assertGreater(len(path), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
