@@ -1,9 +1,12 @@
-import unittest
 import math
 import random
-from Pathing import path_finding
+import unittest
+
 from shapely.geometry import Point
+
+from Pathing import path_finding
 from Polygons import convert_cross_to_polygons
+
 
 def rotate_point(px, py, cx, cy, angle_rad):
     s = math.sin(angle_rad)

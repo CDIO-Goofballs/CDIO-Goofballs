@@ -1,9 +1,8 @@
 import socket
-import keyboard
-from typing import Any
-from enum import Enum
-from robotControls.point import calculate_turn, calculate_distance
 import time
+from enum import Enum
+from typing import Any
+
 import keyboard
 
 port = 12345

@@ -1,13 +1,14 @@
 import math
-import numpy as np
-from shapely.geometry import LineString, Point
-from shapely.ops import nearest_points
+
 import networkx as nx
+import numpy as np
 from networkx.algorithms.approximation import traveling_salesman_problem
+from shapely.geometry import LineString, Point
 
 from Pathfinding.Plotting import plot_route
-from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, generate_safe_points
 from Pathfinding.Point import MyPoint
+from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, \
+    generate_safe_points
 
 safe_points = []
 

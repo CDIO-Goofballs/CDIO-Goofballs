@@ -1,5 +1,6 @@
-import cv2
 from math import atan2, cos, sin, sqrt, pi, degrees
+
+import cv2
 import numpy as np
 
 

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon as MplPolygon, Circle
 import numpy as np
+from matplotlib.patches import Polygon as MplPolygon, Circle
+
 
 def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_order, has_vip, width,
                height, ball_diameter=4, original_obstacles=None, debug=False, start_angle=0):

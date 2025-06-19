@@ -1,10 +1,14 @@
 import time
+
+import keyboard
+
+from ImageRecognition.RoboFlow.MainImageRecognition import initialize_camera, run_image_recognition, \
+    stop_image_recognition
+from Pathfinding.pathing_main import pathing
 from robotControls.controlCenter import connect, send_command, Command
 from robotControls.controls_main import collect_balls, more_balls_left
-from ImageRecognition.RoboFlow.MainImageRecognition import initialize_camera, run_image_recognition, stop_image_recognition
-from Pathfinding.pathing_main import pathing
-import keyboard
-    
+
+
 def with_robot(image=None, camera_index=0):
     if not image:
         initialize_camera(camera_index)

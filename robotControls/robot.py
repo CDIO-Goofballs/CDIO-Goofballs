@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
+import ast
+import queue
+import socket
+import threading
+import time
+
 from ev3dev2.motor import MediumMotor, LargeMotor, OUTPUT_A, OUTPUT_B, OUTPUT_D, SpeedPercent, MoveDifferential
 from ev3dev2.sensor import INPUT_3
 from ev3dev2.sensor.lego import GyroSensor
 from ev3dev2.wheel import Wheel
-import socket
-import time
-import threading
-import queue
-import ast
 
 # Constants
 WHEEL_DIAMETER_MM = 67 # Real life size is 68.8 mm

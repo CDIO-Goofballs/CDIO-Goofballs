@@ -1,5 +1,5 @@
-from inference import get_model
 import supervision as sv
+from inference import get_model
 
 model = get_model(model_id="oob_cdio-kghp5/9", api_key="VD9BLusLGWoKvrez3ufK")
 

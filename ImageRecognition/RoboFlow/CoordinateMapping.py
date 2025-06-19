@@ -1,6 +1,7 @@
+import math
+
 import cv2
 import numpy as np
-import math
 
 camera_height = 1.70  # meters
 scale_aruco_size = 0.15  # meters

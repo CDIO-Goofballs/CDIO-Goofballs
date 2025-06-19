@@ -1,6 +1,6 @@
 # Import the InferencePipeline object
-from inference import InferencePipeline
 import cv2
+from inference import InferencePipeline
 
 
 def my_sink(result, video_frame):
