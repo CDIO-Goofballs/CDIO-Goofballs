@@ -32,9 +32,10 @@ def rotate_with_cam(target):
         target_angle = calculate_turn(get_position_mm(), target, 0)
 
 def boogie_woogie():
+    send_command((Command.TURN, 10), )
     send_command((Command.TURN, -10), )
-    send_command((Command.TURN, 20), )
     send_command((Command.TURN, -10), )
+    send_command((Command.TURN, 10), )
 
 
 
