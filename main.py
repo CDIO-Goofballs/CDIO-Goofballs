@@ -41,8 +41,5 @@ def no_robot(camera_index=0):
 
 
 if __name__ == "__main__":
-    # Uncomment the line below to run with the robot and a specific camera index
-
-    with_robot(camera_index=1)
-    # Uncomment the line below to run without the robot and a specific camera index
-    #no_robot(camera_index=1)
+    #with_robot(camera_index=1)
+    no_robot(camera_index=1)
