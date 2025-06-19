@@ -37,7 +37,6 @@ def boogie_woogie():
     send_command((Command.TURN, -10), )
 
 
-
 def drive_with_cam(target, drive_back=False):
     position = get_position_mm()
     targeting_ball = target.type == 'ball' or target.type == 'vip'
@@ -98,7 +97,7 @@ def drive_to_target(target, drive_back=False):
 
 def more_balls_left():
     position = get_position_mm()
-    offset = 100 if get_angle() > 0 else -100
+    offset = 300 if get_angle() > 0 else -300
     drive_to_target(target=MyPoint(position.x, position.y + offset))
     path = pathing()
     if path[1].type == 'safeV2':
