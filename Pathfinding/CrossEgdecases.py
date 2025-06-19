@@ -52,39 +52,34 @@ class TestCrossRotations(unittest.TestCase):
         self.end = (140, 60)
 
     def test_cross_at_multiple_angles(self):
-        Balls = [(random.uniform(5, self.width - 5), random.uniform(5, self.height-5)) for _ in range(random.randint(0, 10))]
-        margin = 20
-        offset_height = self.height - margin
-        offset_width = self.width - margin
-        for i in range(1):
-            angle = 45
-            rotated_cross = rotate_cross(self.base_cross, angle)
+        angle = 45
+        rotated_cross = rotate_cross(self.base_cross, angle)
 
-            with self.subTest(angle=angle):
-                path = path_finding(
-                    cross=rotated_cross,
-                    egg=None,
-                    start=self.start,
-                    vip= None, #(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None,
-                    balls = [(80, 74), (80, 75), (80, 76), (80, 77)], #[(random.uniform(5, self.width - 5), random.uniform(5, self.height-5)) for _ in range(random.randint(0, 10))],
-                    end=self.end,
-                    wall_corners=self.wall_corners,
-                    robot_radius=self.robot_radius,
-                    width=self.width,
-                    height=self.height,
-                    debug=True,
-                )
+        with self.subTest(angle=angle):
+            path = path_finding(
+                cross=rotated_cross,
+                egg=None,
+                start=self.start,
+                vip= None, #(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None,
+                balls = [(80, 74), (80, 75), (80, 76), (80, 77)], #[(random.uniform(5, self.width - 5), random.uniform(5, self.height-5)) for _ in range(random.randint(0, 10))],
+                end=self.end,
+                wall_corners=self.wall_corners,
+                robot_radius=self.robot_radius,
+                width=self.width,
+                height=self.height,
+                debug=True,
+            )
 
-                self.assertIsInstance(path, list)
+            self.assertIsInstance(path, list)
 
-                obstacles = convert_cross_to_polygons(rotated_cross, 3)
-                inflated_obstacles = [obs.buffer(self.robot_radius).simplify(1.5) for obs in obstacles]
-                start_point = Point(self.start)
-                end_point = Point(self.end)
-                if any(obs.contains(start_point) or obs.contains(end_point) for obs in inflated_obstacles):
-                    self.assertEqual(len(path), 0, f"Path should be empty if start or end inside obstacle at angle {angle}")
-                else:
-                    self.assertGreater(len(path), 0, f"Path should exist at angle {angle}")
+            obstacles = convert_cross_to_polygons(rotated_cross, 3)
+            inflated_obstacles = [obs.buffer(self.robot_radius).simplify(1.5) for obs in obstacles]
+            start_point = Point(self.start)
+            end_point = Point(self.end)
+            if any(obs.contains(start_point) or obs.contains(end_point) for obs in inflated_obstacles):
+                self.assertEqual(len(path), 0, f"Path should be empty if start or end inside obstacle at angle {angle}")
+            else:
+                self.assertGreater(len(path), 0, f"Path should exist at angle {angle}")
 
 
 if __name__ == "__main__":
