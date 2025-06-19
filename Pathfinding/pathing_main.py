@@ -22,7 +22,7 @@ def pathing():
         if not end:
             end = get_big_goal()
         if end:
-            end = (end[0] + (width / 2 - end[0]) / 3.2, end[1])
+            end = (end[0] + (width / 2 - end[0]) / 3, end[1])
 
         path = path_finding(
             cross=cross,egg = egg, start=start, vip=vip, balls=balls, end=end,
