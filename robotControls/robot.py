@@ -13,7 +13,7 @@ from ev3dev2.wheel import Wheel
 # Constants
 WHEEL_DIAMETER_MM = 67 # Real life size is 68.8 mm
 WHEEL_WIDTH_MM = 36 # Real life size is 36 mm
-WHEEL_BASE_MM = 220 # Real life size is 170 mm
+WHEEL_BASE_MM = 270 # Real life size is 170 mm
 
 ROTATION_SPEED = 40
 STRAIGHT_SPEED = 50
@@ -84,7 +84,7 @@ def move_servo(position, brake=True):
 
     if position == servo_position:
         return
-    servo.on_to_position(SpeedPercent(20), position, brake=brake)
+    servo.on_to_position(SpeedPercent(10), position, brake=brake)
     servo_position = position
     servo.off(brake=brake)
         
