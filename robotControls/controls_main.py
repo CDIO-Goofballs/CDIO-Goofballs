@@ -1,6 +1,6 @@
 from ImageRecognition.RoboFlow.MainImageRecognition import run_image_recognition, get_angle, get_position_mm
 from Pathfinding.Point import MyPoint
-from robotControls.controlCenter import send_command, Command, calculate_distance, calculate_turn, wait_for_done
+from robotControls.controlCenter import send_command, Command, calculate_distance, calculate_turn
 from Pathfinding.pathing_main import pathing
 from Pathfinding.Pathing import get_safe_points
 import time
@@ -142,4 +142,4 @@ def collect_balls(image):
     rotate_with_cam(target=MyPoint(position.x, position.y + offset))
     send_command((Command.SERVO, -100), )
     time.sleep(6)
-    send_command((Command.SERVO, 0), )
+    send_command((Command.SERVO, (0, False)), )

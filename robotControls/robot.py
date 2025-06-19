@@ -68,7 +68,7 @@ def execute_command(conn):
         arg = command[1]
         if cmd == "drive": straight(arg[0], speed=arg[1])
         elif cmd == "turn": rotate(-arg)
-        elif cmd == "servo": move_servo(arg)
+        elif cmd == "servo": move_servo(arg[0], arg[1]) if isinstance(arg, tuple) else move_servo(arg)
         elif cmd == "test": test()
         time.sleep(0.1)
         conn.send("Done".encode())
@@ -78,14 +78,14 @@ def test():
     time.sleep(10)
     print("Test complete.")
 
-def move_servo(position):
+def move_servo(position, brake=True):
     global servo_position
 
     if position == servo_position:
         return
-    servo.on_to_position(SpeedPercent(20), position)
+    servo.on_to_position(SpeedPercent(20), position, brake=brake)
     servo_position = position
-    servo.off()
+    servo.off(brake=brake)
         
 
 def check_for_commands(conn):

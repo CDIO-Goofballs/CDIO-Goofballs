@@ -1,5 +1,5 @@
 import time
-from robotControls.controlCenter import connect, send_command, Command, wait_for_done
+from robotControls.controlCenter import connect, send_command, Command
 from robotControls.controls_main import collect_balls, more_balls_left
 from ImageRecognition.RoboFlow.MainImageRecognition import initialize_camera, run_image_recognition, stop_image_recognition
 from Pathfinding.pathing_main import pathing
