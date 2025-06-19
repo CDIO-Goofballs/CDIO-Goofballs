@@ -102,8 +102,8 @@ def more_balls_left():
     drive_to_target(target=MyPoint(position.x, position.y + offset, type='turn'))
     path = pathing()
     if path[1].type == 'safeV2':
-        return path[1].target.type != 'end'
-    return False
+        return path[1].target.type == 'end'
+    return True
 
 def collect_balls(image):
     run_image_recognition(image)
