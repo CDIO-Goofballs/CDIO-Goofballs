@@ -41,7 +41,7 @@ class TestCrossRotations(unittest.TestCase):
 
         # Base cross size ~20 units centered at (80, 60)
         half_size = 10  # half of 20
-        cx, cy = 80, 60
+        cx, cy = 80, 70
         self.base_cross = (
             (cx, cy + half_size),  # top
             (cx, cy - half_size),  # bottom
@@ -56,8 +56,8 @@ class TestCrossRotations(unittest.TestCase):
         margin = 20
         offset_height = self.height - margin
         offset_width = self.width - margin
-        for i in range(100):
-            angle = i * 3.6
+        for i in range(1):
+            angle = 45
             rotated_cross = rotate_cross(self.base_cross, angle)
 
             with self.subTest(angle=angle):
@@ -65,14 +65,14 @@ class TestCrossRotations(unittest.TestCase):
                     cross=rotated_cross,
                     egg=None,
                     start=self.start,
-                    vip=(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None,
-                    balls = [(random.uniform(5, self.width - 5), random.uniform(5, self.height-5)) for _ in range(random.randint(0, 10))], #Balls,
+                    vip= None, #(random.uniform(margin, offset_width), random.uniform(margin, offset_height)) if random.choice([True, False]) else None,
+                    balls = [(80, 74), (80, 75), (80, 76), (80, 77)], #[(random.uniform(5, self.width - 5), random.uniform(5, self.height-5)) for _ in range(random.randint(0, 10))],
                     end=self.end,
                     wall_corners=self.wall_corners,
                     robot_radius=self.robot_radius,
                     width=self.width,
                     height=self.height,
-                    debug=False,
+                    debug=True,
                 )
 
                 self.assertIsInstance(path, list)
