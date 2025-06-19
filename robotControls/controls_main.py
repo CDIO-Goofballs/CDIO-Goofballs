@@ -49,7 +49,7 @@ def drive_with_cam(target, drive_back=False):
         offset = 50
         send_command((Command.SERVO, 0), )
 
-    if (target.type == 'safeV2' and target.target.type == 'end') or target.type == 'end':
+    if (target.type == 'safe' and target.target.type == 'end') or target.type == 'end':
         slow_zone = 180
         slow_speed = 20
         off_course_angle = 3
@@ -75,7 +75,8 @@ def drive_with_cam(target, drive_back=False):
     if targeting_ball:
         time.sleep(0.5)
     if drive_back:
-        send_command((Command.DRIVE, (-(abs(original_distance) + 80), 40)), )
+        drive_back_extra_distance = 0 if target.type == 'safeV3' else 80
+        send_command((Command.DRIVE, (-(abs(original_distance) + drive_back_extra_distance), 40)), )
 
 def drive_to_target(target, drive_back=False):
     if target.type == 'turn' or target.type == 'safeV1' or target.type == 'safeV2' or target.type == 'safeV3':
@@ -94,7 +95,7 @@ def drive_to_target(target, drive_back=False):
 def more_balls_left():
     send_command((Command.DRIVE, (300, 50)), )
     path = pathing()
-    if path[1].type == 'safeV2':
+    if path[1].type == 'safe':
         return path[1].target.type != 'end'
     return True
 

@@ -24,11 +24,11 @@ def get_end_safe_point(end, width):
     safe = safe_points.copy()
     if end.x < width / 2:
         safe.sort(key=lambda pt: pt.x + pt.y)
-        return MyPoint(safe[0].x, safe[0].y, type='safeV2', target=end)
+        return MyPoint(safe[0].x, safe[0].y, type='safe', target=end)
         # Find upper safe point
     else:
         safe.sort(key=lambda pt: - pt.x - pt.y)
-        return MyPoint(safe[0].x, safe[0].y, type='safeV2', target=end)
+        return MyPoint(safe[0].x, safe[0].y, type='safe', target=end)
         # Find lower safe point
 
 
