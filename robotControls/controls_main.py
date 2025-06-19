@@ -53,7 +53,6 @@ def drive_with_cam(target, drive_back=False):
     if target.type == 'end':
         offset = 70
         send_command((Command.SERVO, 0), )
-        wait_for_done()
 
     if (target.type == 'safeV2' and target.target.type == 'end') or target.type == 'end':
         slow_zone = 180
