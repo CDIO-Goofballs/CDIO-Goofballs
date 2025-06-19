@@ -99,7 +99,7 @@ def drive_to_target(target, drive_back=False):
 def more_balls_left():
     position = get_position_mm()
     offset = 300 if get_angle() > 0 else -300
-    drive_to_target(target=MyPoint(position.x, position.y + offset))
+    drive_to_target(target=MyPoint(position.x, position.y + offset, type='turn'))
     path = pathing()
     if path[1].type == 'safeV2':
         return path[1].target.type != 'end'
