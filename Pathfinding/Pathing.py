@@ -46,7 +46,7 @@ def find_nearest_free_point(point, obstacles, search_radius=24, step=1):
     return None
 
 
-def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_distance=22):
+def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, width, height, min_distance=22):
     """
     Step 1: Find the closest free point to the ball.
     Step 2: Push that point.
@@ -92,10 +92,12 @@ def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_di
     # Step 3: Find the closest safe point to the pushed point
     nearest_safe = None
     nearest_dist = float('inf')
-    max_allowed_angle = 60  # degrees
+    max_allowed_angle = 30  # degrees
 
     # Vector A: from ball to closest_free (push direction)
     vec_push = (closest_free.x - ball.x, closest_free.y - ball.y)
+
+    dist_from_ball_to_center = distance(ball, MyPoint(width / 2, height / 2))
 
     for pt in safe_points:
         if not is_visible((ball.x, ball.y), (pt.x, pt.y), original_obstacles):
@@ -108,7 +110,8 @@ def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, min_di
         angle_rad = angle_between_vectors(vec_push, vec_safe)
         angle_deg = math.degrees(angle_rad)
 
-        if angle_deg > max_allowed_angle and calculate_distance(pushed_point, pt) > 12:
+        if (angle_deg > max_allowed_angle and calculate_distance(pushed_point, pt) > 12
+                and dist_from_ball_to_center < 30):
             continue
 
         pushed_to_safe = distance(pushed_point, pt)
@@ -330,7 +333,7 @@ def reconstruct_full_path(paths, best_order, points):
     return full_path
 
 def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_obstacles,
-                          width):
+                          width, height):
     """
     Plan route avoiding obstacles with VIP and balls.
     """
@@ -358,7 +361,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         if vip_idx in reachable:
             new_vip = vip
         else:
-            replacement = find_aligned_safe_point(vip, inflated_obstacles, original_obstacles)
+            replacement = find_aligned_safe_point(vip, inflated_obstacles, original_obstacles, width, height)
             if replacement:
                 new_vip = replacement
             else:
@@ -374,7 +377,7 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
         if idx in reachable:
             filtered_others.append(pt)
         else:
-            replacement = find_aligned_safe_point(pt, inflated_obstacles, original_obstacles)
+            replacement = find_aligned_safe_point(pt, inflated_obstacles, original_obstacles, width, height)
             if replacement:
                 filtered_others.append(replacement)
             else:
@@ -447,7 +450,7 @@ def path_finding(
     ]
 
     best_order, best_length, full_path, has_vip = plan_route_free_space(
-        start, vip, balls, end, inflated_obstacles, obstacles, width=width
+        start, vip, balls, end, inflated_obstacles, obstacles, width=width, height=height
     )
 
     plot_route(start, vip, balls, end, inflated_obstacles, safe_points, full_path,
