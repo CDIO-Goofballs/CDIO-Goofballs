@@ -54,7 +54,7 @@ def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_
         # Print point type
         for i, pt in enumerate(full_path):
             ax.text(pt.x + radius, pt.y + radius, f'{pt.type.capitalize()}', color='black', fontsize=8)
-            if pt.type == 'safeV1' or pt.type == 'safeV2' or pt.type == "safeV3":
+            if pt.type.contains('safe'):
                 # Draw a line between point and the point.target
                 ax.plot([pt.x, pt.target.x], [pt.y, pt.target.y], 'g--', linewidth=2)
 

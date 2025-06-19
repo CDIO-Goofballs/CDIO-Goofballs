@@ -75,11 +75,11 @@ def drive_with_cam(target, drive_back=False):
     if targeting_ball:
         time.sleep(0.5)
     if drive_back:
-        drive_back_extra_distance = 0 if target.type == 'safeV3' else 80
+        drive_back_extra_distance = -30 if target.type == 'safeV3' else 80
         send_command((Command.DRIVE, (-(abs(original_distance) + drive_back_extra_distance), 40)), )
 
 def drive_to_target(target, drive_back=False):
-    if target.type == 'turn' or target.type == 'safeV1' or target.type == 'safeV2' or target.type == 'safeV3':
+    if target.type == 'turn' or target.type.contains('safe'):
         if calculate_distance(get_position_mm(), target) < 60:
             print("Target is too close, skipping drive")
             return
@@ -87,7 +87,7 @@ def drive_to_target(target, drive_back=False):
     run_image_recognition()
     drive_with_cam(target, drive_back=drive_back)
     run_image_recognition()
-    if target.type == 'safeV1' or target.type == 'safeV2' or target.type == 'safeV3':
+    if target.type.contains('safe'):
         print("Arrived at safe point, proceeding to target")
         print("Target:", target.target)
         drive_to_target(target.target, drive_back=target.target.type != 'end')
@@ -120,14 +120,14 @@ def collect_balls(image):
                 break
         modified_path = [MyPoint(10 * p.x, 10 * p.y, type=p.type, target=p.target) for p in sub_path] # Convert from cm to mm
         for p in modified_path:
-            if p.type == 'safeV1' or p.type == 'safeV2' or p.type == 'safeV3':
+            if p.type.contains('safe'):
                 p.target = MyPoint(10 * p.target.x, 10 * p.target.y, type=p.target.type)
 
         print("Modified path: ", modified_path)
         for point in modified_path[1:]:
             drive_to_target(point)
             run_image_recognition(image)
-        if modified_path[-1].type == 'safeV1' or modified_path[-1].type == 'safeV2'or modified_path[-1].type == 'safeV3':
+        if modified_path[-1].type.contains('safe'):
             if modified_path[-1].target.type == 'end':
                 print("End has been reached")
                 end_reached = True
