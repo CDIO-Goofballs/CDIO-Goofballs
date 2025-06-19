@@ -21,20 +21,6 @@ def connect():
     print("Waiting for a client to connect...")
     conn, addr = server_socket.accept()
     print(f"Connected by {addr}")
-
-
-def wait_for_done():
-    global conn
-    if server_socket is None:
-        print("Serversocket is None")
-        return
-    msg = ""
-    while msg != "Done":
-        data = conn.recv(1024)
-        if not data:
-            continue
-        print(data.decode())
-        msg = data.decode()
     
 def reconnect():
     global conn
@@ -60,6 +46,19 @@ class Command(Enum):
     TEST = "test"
 
 def send_command(command: tuple[Command, Any]):
+    def wait_for_done():
+        global conn
+        if server_socket is None:
+            print("Serversocket is None")
+            return
+        msg = ""
+        while msg != "Done":
+            data = conn.recv(1024)
+            if not data:
+                continue
+            print(data.decode())
+            msg = data.decode()
+
     print(command)
     global conn
     name, val = command
@@ -70,6 +69,7 @@ def send_command(command: tuple[Command, Any]):
         print("Connection lost. Reconnecting...")
         reconnect()
     wait_for_done()
+
 
 def send_commands(commands):
     for command in commands:
