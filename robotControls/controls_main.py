@@ -28,7 +28,7 @@ def rotate_with_cam(target):
     run_image_recognition()
     while abs(get_angle() - target_angle) > 1.8:
         diff_angle = (get_angle() - target_angle + 180) % 360 - 180
-        send_command((Command.TURN, -diff_angle * 2 / 3), )
+        send_command((Command.TURN, -diff_angle * 3 / 4), )
         run_image_recognition()
         target_angle = calculate_turn(get_position_mm(), target, 0)
 
@@ -52,7 +52,7 @@ def drive_with_cam(target, drive_back=False):
     slow_speed = 20 if targeting_ball else 35
     off_course_angle = 2 if targeting_ball else 6
     if target.type == 'end':
-        offset = 70
+        offset = 80
         send_command((Command.SERVO, 0), )
 
     if (target.type == 'safeV2' and target.target.type == 'end') or target.type == 'end':
@@ -102,7 +102,7 @@ def more_balls_left():
     drive_to_target(target=MyPoint(position.x, position.y + offset, type='turn'))
     path = pathing()
     if path[1].type == 'safeV2':
-        return path[1].target.type == 'end'
+        return path[1].target.type != 'end'
     return True
 
 def collect_balls(image):
