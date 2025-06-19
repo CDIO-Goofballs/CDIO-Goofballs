@@ -94,6 +94,15 @@ def drive_to_target(target, drive_back=False):
         print("Target:", target.target)
         drive_to_target(target.target, drive_back=target.target.type != 'end')
 
+def more_balls_left():
+    position = get_position_mm()
+    offset = 100 if get_angle() > 0 else -100
+    drive_to_target(target=MyPoint(position.x, position.y + offset))
+    path = pathing()
+    if path[1].type == 'safeV2':
+        return path[1].target.type != 'end'
+    return False
+
 def collect_balls(image):
     run_image_recognition(image)
     end_reached = False

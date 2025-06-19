@@ -1,6 +1,6 @@
 import time
 from robotControls.controlCenter import connect, send_command, Command, wait_for_done
-from robotControls.controls_main import collect_balls
+from robotControls.controls_main import collect_balls, more_balls_left
 from ImageRecognition.RoboFlow.MainImageRecognition import initialize_camera, run_image_recognition, stop_image_recognition
 from Pathfinding.pathing_main import pathing
 import keyboard
@@ -13,12 +13,9 @@ def with_robot(image=None, camera_index=0):
     keyboard.wait('s')
     print("--------------Start--------------")
     keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
-    run_image_recognition(image)
-    run_image_recognition(image)
     collect_balls(image)
-    #run_image_recognition()y
-    #if len(get_balls()) > 0 or get_vip_ball() is not None:
-    #    collect_balls(image) # Run to goal
+    while more_balls_left():
+        collect_balls(image)
     print("--------------DONE--------------")
 
 
