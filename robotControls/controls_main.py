@@ -47,7 +47,6 @@ def drive_with_cam(target, drive_back=False):
     off_course_angle = 2 if targeting_ball else 6
     if target.type == 'end':
         offset = 50
-        send_command((Command.SERVO, 0), )
 
     if (target.type == 'safe' and target.target.type == 'end') or target.type == 'end':
         slow_zone = 180
@@ -90,6 +89,7 @@ def drive_to_target(target, drive_back=False):
     if 'safe' in target.type:
         print("Arrived at safe point, proceeding to target")
         print("Target:", target.target)
+        if target.target.type == 'end': send_command((Command.SERVO, 0), )
         drive_to_target(target.target, drive_back=target.target.type != 'end')
 
 def more_balls_left():
