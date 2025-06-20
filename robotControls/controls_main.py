@@ -136,5 +136,6 @@ def collect_balls(image):
     offset = 1000 if get_angle() > 0 else -1000
     rotate_with_cam(target=MyPoint(position.x, position.y + offset))
     send_command((Command.SERVO, -100), )
-    time.sleep(6)
+    time.sleep(5)
+    send_command((Command.DRIVE, (-30, 10)), )
     send_command((Command.SERVO, (0, False)), )
