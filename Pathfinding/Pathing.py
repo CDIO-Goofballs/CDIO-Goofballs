@@ -9,7 +9,7 @@ from shapely.geometry import LineString, Point
 from Pathfinding.Plotting import plot_route
 from Pathfinding.Point import MyPoint, calculate_distance
 from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, \
-    generate_safe_points
+    generate_safe_points, decompose_cross_polygon
 
 safe_points = []
 
@@ -359,47 +359,75 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
 
     if vip:
         if vip_idx in reachable:
-            new_vip = vip
+            vip_replacement = vip
         else:
             replacement = find_aligned_safe_point(vip, inflated_obstacles, original_obstacles, width, height)
             if replacement:
-                new_vip = replacement
+                vip_replacement = replacement
             else:
-                new_vip = None
+                vip_replacement = None
                 print("Replacement vip not found")
     else:
-        new_vip = None
+        vip_replacement = None
 
-    filtered_others = []
+    ball_replacements = []
     ball_start_idx = 2 if vip is not None else 1
     for i, pt in enumerate(others):
         idx = i + ball_start_idx
         if idx in reachable:
-            filtered_others.append(pt)
+            ball_replacements.append(pt)
         else:
             replacement = find_aligned_safe_point(pt, inflated_obstacles, original_obstacles, width, height)
             if replacement:
-                filtered_others.append(replacement)
+                ball_replacements.append(replacement)
             else:
                 replacement = find_nearest_safe_point(pt, inflated_obstacles, original_obstacles)
                 filtered_others.append(replacement)
                 print("No good replacement found")
 
+
     filtered_end = get_end_safe_point(end, width)
     if filtered_end is None:
         return [], 0, [], vip is not None
 
+    replacement_points = [start]
+    if vip_replacement:
+        replacement_points.append(vip_replacement)
+    replacement_points += ball_replacements
+    replacement_points.append(filtered_end)
+
+    G, all_nodes = build_visibility_graph(replacement_points, inflated_obstacles)
+    replacements_indices = list(range(len(replacement_points)))
+
+    new_reachable = set()
+    for i in replacements_indices:
+        if i == 0 or nx.has_path(G, source=0, target=i):
+            new_reachable.add(i)
+
+    filtered_balls = []
+    for i, pt in enumerate(ball_replacements):
+        idx = i + ball_start_idx
+        if idx in new_reachable:
+            filtered_balls.append(pt)
+
+    if vip_idx in new_reachable:
+        new_vip = vip_replacement
+    else:
+        new_vip = None
+
+    print(f"Filtered balls: {filtered_balls}")
+
     new_points = [start]
     if new_vip:
         new_points.append(new_vip)
-    new_points += filtered_others
+    new_points += filtered_balls
     new_points.append(filtered_end)
 
     G, all_nodes = build_visibility_graph(new_points, inflated_obstacles)
     points_indices = list(range(len(new_points)))
     dist, paths = compute_distance_matrix(G, all_nodes, points_indices)
 
-    if new_vip:
+    if vip_replacement:
         vip_idx = 1
         best_order, best_length = solve_tsp_approx(dist, start_idx=0, end_idx=len(points_indices) - 1,
                                                    must_visit_first=vip_idx)
@@ -409,13 +437,13 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
     try:
         if best_order and best_length < float('inf'):
             full_path = reconstruct_full_path(paths, best_order, new_points)
-            return best_order, best_length, full_path, new_vip is not None
+            return best_order, best_length, full_path, vip_replacement is not None
         else:
-            return [], 0, [], new_vip is not None
+            return [], 0, [], vip_replacement is not None
     except Exception as e:
         print(e)
         traceback.print_exc()
-        return [], 0, [], new_vip is not None
+        return [], 0, [], vip_replacement is not None
 
 
 def path_finding(
@@ -426,7 +454,7 @@ def path_finding(
     """
     global safe_points
 
-    cross_obstacles = convert_cross_to_polygons(cross, 3) if cross else []
+    cross_obstacles = convert_cross_to_polygons(cross) if cross else []
     boundary_walls = create_boundary_walls_from_corners(wall_corners, thickness=1.5) if wall_corners else []
     egg_obstacle = create_egg(egg) if egg else []
 
