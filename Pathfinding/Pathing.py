@@ -381,7 +381,9 @@ def plan_route_free_space(start, vip, others, end, inflated_obstacles, original_
             if replacement:
                 filtered_others.append(replacement)
             else:
-                print("Replacement not found")
+                replacement = find_nearest_safe_point(pt, inflated_obstacles, original_obstacles)
+                filtered_others.append(replacement)
+                print("No good replacement found")
 
     filtered_end = get_end_safe_point(end, width)
     if filtered_end is None:
