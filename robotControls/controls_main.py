@@ -100,8 +100,10 @@ def more_balls_left():
     return True
 
 def collect_balls(image):
+    global ROBOT_LENGTH
     run_image_recognition(image)
     end_reached = False
+    last_path = None
     while not end_reached:
         path = pathing()
         if not path:
@@ -124,6 +126,13 @@ def collect_balls(image):
                 p.target = MyPoint(10 * p.target.x, 10 * p.target.y, type=p.target.type)
 
         print("Modified path: ", modified_path)
+
+        if path[0].type == 'safe':
+            if last_path and last_path[0].type == 'safe':
+                if calculate_distance(last_path[0], modified_path[0]) < 20 and calculate_distance(
+                        last_path[0].target, modified_path[0].target) < 20:
+                    ROBOT_LENGTH = 230
+
         for point in modified_path[1:]:
             drive_to_target(point)
             run_image_recognition(image)
@@ -131,6 +140,9 @@ def collect_balls(image):
             if modified_path[-1].target.type == 'end':
                 print("End has been reached")
                 end_reached = True
+
+        last_path = modified_path
+        ROBOT_LENGTH = 250
 
     position = get_position_mm()
     offset = 1000 if get_angle() > 0 else -1000
