@@ -20,6 +20,7 @@ def pathing():
         start_angle = get_angle()
 
         if not end:
+            print("No small goal found, trying to find big goal instead.")
             end = get_big_goal()
         if end:
             end = (end[0] + (width / 2 - end[0]) / 2.9, end[1])

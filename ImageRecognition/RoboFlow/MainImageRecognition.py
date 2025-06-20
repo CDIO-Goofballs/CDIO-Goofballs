@@ -1,7 +1,7 @@
 import cv2
 
 from ImageRecognition.RoboFlow.CoordinateMapping import find_aruco
-from ImageRecognition.RoboFlow.RoboFlow import object_recognition, big_goal
+from ImageRecognition.RoboFlow.RoboFlow import object_recognition
 from Pathfinding.Point import MyPoint
 
 scale_factor = 0.33
@@ -13,6 +13,7 @@ wall_corners = None
 egg = None
 cross = None
 small_goal = None
+big_goal = None
 
 frame_width = 640  # Default width, can be adjusted
 frame_height = 480  # Default height, can be adjusted
@@ -26,7 +27,7 @@ def initialize_camera(camera_index=0):
     frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 def run_image_recognition(imageFrame=None):
-    global scale_factor, latest_position, latest_angle, balls, vip_ball, wall_corners, egg, cross, small_goal, frame_height, frame_width
+    global scale_factor, latest_position, latest_angle, balls, vip_ball, wall_corners, egg, cross, small_goal, big_goal, frame_height, frame_width
 
     if imageFrame is None:
         ret, imageFrame = cam.read()

@@ -46,7 +46,7 @@ def drive_with_cam(target, drive_back=False):
     slow_speed = 20 if targeting_ball else 35
     off_course_angle = 2 if targeting_ball else 6
     if target.type == 'end':
-        offset = 50
+        offset = 60
 
     if (target.type == 'safe' and target.target.type == 'end') or target.type == 'end':
         slow_zone = 180

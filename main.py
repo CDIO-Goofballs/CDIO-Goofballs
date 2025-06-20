@@ -44,5 +44,5 @@ def no_robot(camera_index=0):
 
 
 if __name__ == "__main__":
-    #with_robot(camera_index=1)
-    no_robot(camera_index=1)
+    with_robot(camera_index = 1)
+    #no_robot(camera_index = 1)
