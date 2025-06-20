@@ -58,7 +58,9 @@ def find_aruco(image, scale_factor, width, height):
                 cv2.polylines(image, [pts.astype(np.int32)], True, (0, 255, 0), 2)
 
                 # Set scale factor based on the detected marker size
-                scale_factor = (scale_aruco_size / cv2.norm(pts[0] - pts[1])) * 100  # Convert to cm
+                new_scale_factor = (scale_aruco_size / cv2.norm(pts[0] - pts[1])) * 100  # Convert to cm
+                if new_scale_factor < 0.5:
+                    scale_factor = new_scale_factor
 
     if projected_x and projected_y:
         # Convert to real-world units
