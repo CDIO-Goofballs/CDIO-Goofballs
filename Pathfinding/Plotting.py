@@ -80,5 +80,6 @@ def plot_route(start, vip, others, end, obstacles, safe_points, full_path, best_
     else:
         fig.canvas.draw()
         fig.canvas.flush_events()
+        plt.pause(0.001)
 
 
