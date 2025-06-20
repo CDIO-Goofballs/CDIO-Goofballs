@@ -16,11 +16,14 @@ def with_robot(image=None, camera_index=0):
     connect()
     keyboard.wait('s')
     print("--------------Start--------------")
+    start_time = time.time()
     keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
     collect_balls(image)
     while more_balls_left():
         collect_balls(image)
+    print("Time taken for completing course: ", time.time() - start_time)
     print("--------------DONE--------------")
+
 
 
 def no_robot(camera_index=0):
