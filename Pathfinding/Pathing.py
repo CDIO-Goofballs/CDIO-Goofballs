@@ -110,7 +110,7 @@ def find_aligned_safe_point(ball, inflated_obstacles, original_obstacles, width,
         angle_rad = angle_between_vectors(vec_push, vec_safe)
         angle_deg = math.degrees(angle_rad)
 
-        if (angle_deg > max_allowed_angle and calculate_distance(pushed_point, pt) > 12
+        if (angle_deg > max_allowed_angle and calculate_distance(closest_free, ball) > 14
                 and dist_from_ball_to_center < 30):
             continue
 
