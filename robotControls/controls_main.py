@@ -152,8 +152,14 @@ def collect_balls(image):
         ROBOT_LENGTH = 250
 
     position = get_position_mm()
-    offset = 1000 if get_angle() > 0 else -1000
-    rotate_with_cam(target=MyPoint(position.x, position.y + offset))
+    # Rotate to be perpendicular to the wall
+    safe_points = get_safe_points()
+    safe_points.sort(key=lambda x: calculate_distance(position, x))
+    points_to_use = safe_points[:2]
+    # Sort points by their x-coordinate according to get_angle() > 0
+    points_to_use.sort(key=lambda x: x.x if get_angle() > 0 else -x.x)
+    v = points_to_use[1] - points_to_use[0]
+    rotate_with_cam(target=MyPoint(position.x + v.x, position.y + v.y))
     send_command((Command.SERVO, -100), )
     time.sleep(4)
     send_command((Command.DRIVE, (-50, 10)), )
