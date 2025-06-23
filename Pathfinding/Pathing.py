@@ -9,7 +9,7 @@ from shapely.geometry import LineString, Point
 from Pathfinding.Plotting import plot_route
 from Pathfinding.Point import MyPoint, calculate_distance
 from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, \
-    generate_safe_points, decompose_cross_polygon
+    generate_safe_points
 
 safe_points = []
 
