@@ -154,10 +154,11 @@ def collect_balls(image):
     position = get_position_mm()
     # Rotate to be perpendicular to the wall
     safe_points = get_safe_points()
-    safe_points.sort(key=lambda x: calculate_distance(position, x))
+    modified_safe_points = [MyPoint(10 * pt.x, 10 * pt.y) for pt in safe_points]  # Convert from cm to mm
+    modified_safe_points.sort(key=lambda x: calculate_distance(position, x))
     points_to_use = safe_points[:2]
     # Sort points by their x-coordinate according to get_angle() > 0
-    points_to_use.sort(key=lambda x: x.x if get_angle() < 0 else -x.x)
+    points_to_use.sort(key=lambda x: x.y if get_angle() < 0 else -x.y)
     v = MyPoint(points_to_use[0].x - points_to_use[1].x, points_to_use[0].y - points_to_use[1].y)
     rotate_with_cam(target=MyPoint(position.x + v.x, position.y + v.y))
     send_command((Command.SERVO, -100), )
