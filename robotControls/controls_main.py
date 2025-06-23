@@ -46,7 +46,7 @@ def drive_with_cam(target, drive_back=False):
     slow_speed = 20 if targeting_ball else 35
     off_course_angle = 2 if targeting_ball else 6
     if target.type == 'end':
-        offset = 60
+        offset = 70
 
     if (target.type == 'safe' and target.target.type == 'end') or target.type == 'end':
         slow_zone = 180
@@ -156,10 +156,12 @@ def collect_balls(image):
     safe_points = get_safe_points()
     modified_safe_points = [MyPoint(10 * pt.x, 10 * pt.y) for pt in safe_points]  # Convert from cm to mm
     modified_safe_points.sort(key=lambda x: calculate_distance(position, x))
-    points_to_use = safe_points[:2]
+    points_to_use = modified_safe_points[:2]
     # Sort points by their x-coordinate according to get_angle() > 0
-    points_to_use.sort(key=lambda x: x.y if get_angle() < 0 else -x.y)
+    points_to_use.sort(key=lambda x: x.y if get_angle() > 0 else -x.y)
     v = MyPoint(points_to_use[0].x - points_to_use[1].x, points_to_use[0].y - points_to_use[1].y)
+    print("v: ", v)
+    print("Angle: ", get_angle())
     rotate_with_cam(target=MyPoint(position.x + v.x, position.y + v.y))
     send_command((Command.SERVO, -100), )
     time.sleep(4)
