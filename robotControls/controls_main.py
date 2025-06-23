@@ -157,8 +157,8 @@ def collect_balls(image):
     safe_points.sort(key=lambda x: calculate_distance(position, x))
     points_to_use = safe_points[:2]
     # Sort points by their x-coordinate according to get_angle() > 0
-    points_to_use.sort(key=lambda x: x.x if get_angle() > 0 else -x.x)
-    v = points_to_use[1] - points_to_use[0]
+    points_to_use.sort(key=lambda x: x.x if get_angle() < 0 else -x.x)
+    v = MyPoint(points_to_use[0].x - points_to_use[1].x, points_to_use[0].y - points_to_use[1].y)
     rotate_with_cam(target=MyPoint(position.x + v.x, position.y + v.y))
     send_command((Command.SERVO, -100), )
     time.sleep(4)
