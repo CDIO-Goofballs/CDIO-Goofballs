@@ -74,7 +74,4 @@ def send_commands(commands):
     for command in commands:
         send_command(command)
 
-keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
-keyboard.add_hotkey('t', send_command, args=((Command.SERVO, 30),))
-keyboard.add_hotkey('y', send_command, args=((Command.SERVO, 0),))
-keyboard.add_hotkey('u', send_command, args=((Command.SERVO, -80),))
+keyboard.add_hotkey('e', send_command, args=((Command.SERVO, (0, False)),))

@@ -72,7 +72,7 @@ def drive_with_cam(target, drive_back=False):
         send_command((Command.SERVO, 35),)
     send_command((Command.DRIVE, (distance, slow_speed)), )
     if targeting_ball:
-        time.sleep(0.5)
+        time.sleep(1)
     if drive_back:
         drive_back_extra_distance = -30 if target.type == 'safeV3' else 80
         send_command((Command.DRIVE, (-(abs(original_distance) + drive_back_extra_distance), 40)), )
@@ -97,7 +97,10 @@ def drive_to_target(target, drive_back=False):
 
 def more_balls_left():
     send_command((Command.DRIVE, (300, 50)), )
+    run_image_recognition()
     path = pathing()
+    if not path:
+        return False
     if path[1].type == 'safe':
         return path[1].target.type != 'end'
     return True
@@ -130,11 +133,12 @@ def collect_balls(image):
 
         print("Modified path: ", modified_path)
 
-        if path[0].type == 'safe':
-            if last_path and last_path[0].type == 'safe':
-                if calculate_distance(last_path[0], modified_path[0]) < 20 and calculate_distance(
-                        last_path[0].target, modified_path[0].target) < 20:
-                    ROBOT_LENGTH = 230
+        if 'safe' in path[1].type:
+            if last_path and 'safe' in last_path[1].type:
+                if calculate_distance(last_path[1], modified_path[1]) < 20 and calculate_distance(
+                        last_path[1].target, modified_path[1].target) < 20:
+                    ROBOT_LENGTH = 240
+                    print("Same path, drive longer")
 
         for point in modified_path[1:]:
             drive_to_target(point)
@@ -151,6 +155,7 @@ def collect_balls(image):
     offset = 1000 if get_angle() > 0 else -1000
     rotate_with_cam(target=MyPoint(position.x, position.y + offset))
     send_command((Command.SERVO, -100), )
-    time.sleep(5)
-    send_command((Command.DRIVE, (-30, 10)), )
+    time.sleep(4)
+    send_command((Command.DRIVE, (-50, 10)), )
+    time.sleep(4)
     send_command((Command.SERVO, (0, False)), )

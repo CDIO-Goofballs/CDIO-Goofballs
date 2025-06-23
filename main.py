@@ -17,7 +17,6 @@ def with_robot(image=None, camera_index=0):
     keyboard.wait('s')
     print("--------------Start--------------")
     start_time = time.time()
-    keyboard.add_hotkey('e', send_command, args=((Command.STOP, None),))
     collect_balls(image)
     while more_balls_left():
         collect_balls(image)
