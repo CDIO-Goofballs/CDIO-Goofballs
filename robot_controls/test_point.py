@@ -1,5 +1,5 @@
 import unittest
-from Pathfinding.Point import calculate_distance, calculate_turn
+from pathfinding.point import calculate_distance, calculate_turn
 
 class TestPoint(unittest.TestCase):
 

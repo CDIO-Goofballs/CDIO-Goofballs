@@ -1,10 +1,10 @@
 import time
 
-from ImageRecognition.RoboFlow.MainImageRecognition import run_image_recognition, get_angle, get_position_mm
-from Pathfinding.Pathing import get_safe_points
-from Pathfinding.Point import MyPoint, calculate_distance, calculate_turn
-from Pathfinding.pathing_main import pathing
-from robotControls.controlCenter import send_command, Command
+from image_recognition.main_image_recognition import run_image_recognition, get_angle, get_position_mm
+from pathfinding.pathing import get_safe_points
+from pathfinding.point import MyPoint, calculate_distance, calculate_turn
+from pathfinding.pathing_main import pathing
+from robot_controls.control_center import send_command, Command
 
 ROBOT_LENGTH = 250
 

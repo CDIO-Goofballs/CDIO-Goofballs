@@ -1,8 +1,8 @@
 import cv2
 
-from ImageRecognition.RoboFlow.CoordinateMapping import find_aruco
-from ImageRecognition.RoboFlow.RoboFlow import object_recognition
-from Pathfinding.Point import MyPoint
+from image_recognition.coordinate_mapping import find_aruco
+from image_recognition.roboflow import object_recognition
+from pathfinding.point import MyPoint
 
 scale_factor = 0.33
 latest_position = None
@@ -37,7 +37,7 @@ def run_image_recognition(imageFrame=None):
     imageFrame, balls, vip_ball, wall_corners, cross, egg, small_goal, big_goal = object_recognition(imageFrame, scale_factor)
 
     # Display the captured frame
-    cv2.imshow("ImageRecognition", imageFrame)
+    cv2.imshow("image_recognition", imageFrame)
     return cv2.waitKey(1) & 0xFF == ord('q')
 
 def stop_image_recognition():

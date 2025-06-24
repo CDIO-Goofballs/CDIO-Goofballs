@@ -3,8 +3,8 @@ import unittest
 
 from shapely.geometry import Point, Polygon
 
-from Pathing import path_finding
-from Polygons import convert_cross_to_polygons, create_egg
+from pathing import path_finding
+from polygons import convert_cross_to_polygons, create_egg
 
 
 def generate_random_cross(center_x, center_y, size=20):

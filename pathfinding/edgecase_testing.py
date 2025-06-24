@@ -1,8 +1,8 @@
 import unittest
 import random
 import traceback
-from Pathing import path_finding
-from Polygons import convert_cross_to_polygons, create_egg
+from pathing import path_finding
+from polygons import convert_cross_to_polygons, create_egg
 from shapely.geometry import Point
 from unittest.mock import patch
 

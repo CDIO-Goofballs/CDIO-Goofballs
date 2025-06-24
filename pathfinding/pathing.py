@@ -6,9 +6,9 @@ import numpy as np
 from networkx.algorithms.approximation import traveling_salesman_problem
 from shapely.geometry import LineString, Point
 
-from Pathfinding.Plotting import plot_route
-from Pathfinding.Point import MyPoint, calculate_distance
-from Pathfinding.Polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, \
+from pathfinding.plotting import plot_route
+from pathfinding.point import MyPoint, calculate_distance
+from pathfinding.polygons import convert_cross_to_polygons, create_egg, create_boundary_walls_from_corners, \
     generate_safe_points
 
 safe_points = []

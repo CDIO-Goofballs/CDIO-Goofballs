@@ -2,11 +2,11 @@ import time
 
 import keyboard
 
-from ImageRecognition.RoboFlow.MainImageRecognition import initialize_camera, run_image_recognition, \
+from image_recognition.main_image_recognition import initialize_camera, run_image_recognition, \
     stop_image_recognition
-from Pathfinding.pathing_main import pathing
-from robotControls.controlCenter import connect, send_command, Command
-from robotControls.controls_main import collect_balls, more_balls_left
+from pathfinding.pathing_main import pathing
+from robot_controls.control_center import connect
+from robot_controls.controls_main import collect_balls, more_balls_left
 
 
 def with_robot(image=None, camera_index=0):
