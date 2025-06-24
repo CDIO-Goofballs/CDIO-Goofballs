@@ -1,0 +1,4 @@
+*.pyc
+/cdio
+/.idea
+.env
