@@ -24,11 +24,18 @@ def get_difference_in_angle(robot_angle, new_robot_angle):
 def rotate_with_cam(target):
     turning_angle = calculate_turn(get_position_mm(), target, get_angle())
     target_angle = calculate_turn(get_position_mm(), target, 0)
-    send_command((Command.TURN, turning_angle), )
+    scale = 1.0
+    if turning_angle > 90 or turning_angle < -90:
+        scale = 0.8
+    elif turning_angle > 120 or turning_angle < -120:
+        scale = 0.6
+    elif turning_angle > 140 or turning_angle < -140:
+        scale = 0.45
+    send_command((Command.TURN, turning_angle * scale), )
     run_image_recognition()
     while abs(get_angle() - target_angle) > 1.8:
         diff_angle = (get_angle() - target_angle + 180) % 360 - 180
-        send_command((Command.TURN, -diff_angle * 3 / 4), )
+        send_command((Command.TURN, -diff_angle), )
         run_image_recognition()
         target_angle = calculate_turn(get_position_mm(), target, 0)
 
