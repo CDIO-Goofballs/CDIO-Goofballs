@@ -26,11 +26,11 @@ def rotate_with_cam(target):
     target_angle = calculate_turn(get_position_mm(), target, 0)
     scale = 1.0
     if turning_angle > 90 or turning_angle < -90:
-        scale = 0.8
+        scale = 0.7
     elif turning_angle > 120 or turning_angle < -120:
-        scale = 0.6
+        scale = 0.5
     elif turning_angle > 140 or turning_angle < -140:
-        scale = 0.45
+        scale = 0.35
     send_command((Command.TURN, turning_angle * scale), )
     run_image_recognition()
     while abs(get_angle() - target_angle) > 1.8:
@@ -147,6 +147,12 @@ def collect_balls(image):
                     ROBOT_LENGTH = 240
                     print("Same path, drive longer")
 
+        if 'ball' in path[1].type or 'vip' in path[1].type:
+            if last_path and ('ball' in last_path[1].type or 'vip' in last_path[1].type):
+                if calculate_distance(last_path[1], modified_path[1]) < 20:
+                    ROBOT_LENGTH = 230
+                    print("Same path, drive longer")
+
         for point in modified_path[1:]:
             drive_to_target(point)
             run_image_recognition(image)
@@ -172,9 +178,4 @@ def collect_balls(image):
     rotate_with_cam(target=MyPoint(position.x + v.x * 10, position.y + v.y * 10))
     send_command((Command.SERVO, -100), )
     time.sleep(4)
-    #send_command((Command.SERVO, 0), )
-    #send_command((Command.DRIVE, (-100, 30)), )
-    #send_command((Command.DRIVE, (100, 30)), )
-    #send_command((Command.SERVO, -100), )
-    #time.sleep(4)
     send_command((Command.SERVO, (0, False)), )
