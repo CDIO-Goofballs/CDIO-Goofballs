@@ -1,7 +1,13 @@
+import os
+
 import supervision as sv
+from dotenv import load_dotenv
 from inference import get_model
 
-model = get_model(model_id="oob_cdio-kghp5/9", api_key="VD9BLusLGWoKvrez3ufK")
+load_dotenv()
+api_key = os.getenv("API_KEY")
+
+model = get_model(model_id="oob_cdio-kghp5/9", api_key=api_key)
 
 balls = []
 vip_ball = None
